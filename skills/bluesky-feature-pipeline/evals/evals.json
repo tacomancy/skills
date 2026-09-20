@@ -6,12 +6,12 @@
       "name": "stage-0-collision-sends-the-adopter-to-the-adoption-path",
       "prompt": "Set this repository up for the pipeline.",
       "fixture": "fixtures/repository/CLAUDE.md with fixtures/repository/history.md: a repository with its own PR template, CI workflow, labels, and tickets in flight; the script answers as § Script answers says",
-      "expected_output": "The session names stage 0 and its end — the checklist done, no feature work. It runs install.sh with the family prefix `feature`, reads the exit naming .github/pull_request_template.md, leaves that file alone, and turns to ADOPTING.md for the merge of that template, the mapping of the existing labels (`feature/<name>` is already the family; `ready` is the unclaimed state; `spec` already marks beats), and the reading of #7's tickets as already in the one shape. BRANCH_PROTECTION.md is the remainder, with the three check names added beside `test`.",
+      "expected_output": "The session names stage 0 and its end — the checklist done, no feature work. It runs install.sh with the family prefix `feature`, reads the exit naming .github/pull_request_template.md, leaves that file alone, and turns to ADOPTING.md for the merge of that template, the mapping of the existing labels (`feature/<name>` is already the family; `ready` is the unclaimed state; `spec` already marks beats), and the reading of #7's tickets as already in the one shape, with #7 itself given `spec:tickets-generated` for where it stands. BRANCH_PROTECTION.md is the remainder, with the three check names added beside `test`.",
       "assertions": [
         "the response names stage 0 and states that its authority ends at the checklist, before any feature work",
         "the colliding file is left untouched and the session turns to ADOPTING.md rather than overwriting or hand-editing around the script",
         "the existing labels are mapped — `feature/<name>` as the family, `spec` on beats, `ready` as the unclaimed state — rather than duplicated",
-        "#7 and its children are read as already in the one shape, so nothing is done to them",
+        "#7's tickets are read as already in the one shape and left as they are; #7 itself gains only the status label for where it stands, `spec:tickets-generated`",
         "branch protection is the stated remainder from BRANCH_PROTECTION.md — the three check names added beside `test` — not something the script is expected to do"
       ]
     },
