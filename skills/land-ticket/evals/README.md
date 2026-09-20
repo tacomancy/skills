@@ -1,0 +1,3 @@
+# Evaluation fixtures
+
+`evals.json` names the prompts, the fixture under `fixtures/` each runs against, and what to check. The fixture is a ticket set in the shape `to-tickets` produces — a parent with three children, their blocking edges, and one child with an open PR whose branch is behind the base — with the tracker's answers written out so a run can be read against it without a live repository. The first two evals cover the gate: it waits on the run for the PR's current head rather than the PR's aggregate checks, and a branch that is merely behind is updated rather than handed back. Run by hand with `skill-creator` before a merge that changes `SKILL.md`, and record the outcome in the pull request.
