@@ -1,6 +1,6 @@
-# Review note template
+# Review checklist
 
-The shape § 4 Review writes for one prototype. Angle brackets mark what the reviewer fills in; the four bold labels are kept as written, so a code review cites a part by name ("the note's brief-wins part says notes are ordered by date").
+The four parts § 4 Review fills for one prototype; filled, it is the review note. Angle brackets mark what the reviewer fills in; the four bold labels are kept as written, so a code review cites a part by name ("the note's brief-wins part says notes are ordered by date").
 
 ```markdown
 # Review — <NN-surface>
@@ -14,9 +14,11 @@ The shape § 4 Review writes for one prototype. Angle brackets mark what the rev
 **Prototype settles:** <each piece of layout and visual treatment the implementation takes from the prototype, one line — regions and their order, what is visible at once, the states shown>
 ```
 
-Every line is one thing a review can cite, so a part stays a list of lines; a brief-wins part that runs long is restating the brief, and a pointer to the section does that work. Palette and typography never appear under **Prototype settles**: they come from the brand kit.
+Every line is one thing a review can cite, so a part stays a list of lines; a brief-wins part that runs long is restating the brief, and a pointer to the section does that work. Palette and typography come from the brand kit (the rule's fifth clause), so **Prototype settles** lists layout and treatment only.
 
 ## No prototype
+
+The same four parts, with the fourth label swapped: the established visual language stands in for the prototype.
 
 ```markdown
 # Review — <surface> (no prototype)
@@ -30,4 +32,4 @@ Every line is one thing a review can cite, so a part stays a list of lines; a br
 **Language settles:** <the established visual language — palette by role, type, navigation, density, components — from Prompt 0's output or the standing header>
 ```
 
-Layout the two filled parts leave open comes from the brief's prose.
+Layout the note leaves open comes from the brief's prose.
