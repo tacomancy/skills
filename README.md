@@ -10,7 +10,7 @@ Each skill is a folder under `skills/` holding a `SKILL.md`; the skills are the 
 
 ## Skills
 
-_None installable yet. Specs are open as `spec` issues; the first skill in progress is `guidance-tiers`._
+_None yet._
 
 ## Developing
 

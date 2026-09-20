@@ -3,8 +3,7 @@
   "private": true,
   "description": "Agent skills distilled from how tacomancy projects are run. The skills are the source; this package exists only to test them.",
   "scripts": {
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test": "tsc --noEmit && vitest run"
   },
   "packageManager": "pnpm@10.4.1",
   "devDependencies": {

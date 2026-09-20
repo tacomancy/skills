@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
+import { fileURLToPath } from "node:url";
 import { checkSkills } from "./check";
 
-const fixture = (name: string) => new URL(`./fixtures/${name}/skills/`, import.meta.url).pathname;
+const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+const fixture = (name: string) => here(`./fixtures/${name}/skills/`);
 
 describe("structural check over a skills directory", () => {
   test("a conforming skill folder produces no findings", () => {
@@ -9,7 +11,7 @@ describe("structural check over a skills directory", () => {
   });
 });
 
-describe("each rule fails naming the folder and the rule", () => {
+describe("SKILL.md", () => {
   test("a folder without SKILL.md", () => {
     expect(checkSkills(fixture("missing-skill-md"))).toEqual([
       expect.objectContaining({ folder: "no-file", rule: "skill-md-exists" }),
@@ -37,25 +39,30 @@ describe("name", () => {
 
 describe("description", () => {
   test("an empty description, or one over the 1024-character limit, fails; one exactly at the limit passes", () => {
-    expect(checkSkills(fixture("bad-description"))).toEqual([
-      expect.objectContaining({ folder: "empty-description", rule: "description-within-limit" }),
+    expect(checkSkills(fixture("description-limits"))).toEqual([
+      expect.objectContaining({ folder: "empty-description", rule: "description-non-empty" }),
       expect.objectContaining({ folder: "long-description", rule: "description-within-limit" }),
     ]);
   });
 });
 
 describe("relative links", () => {
-  test("a relative link to a file that does not exist fails, naming the target; URLs and anchors are ignored", () => {
+  test("a relative link fails unless it resolves to a file inside the skill folder; URLs and anchors are ignored", () => {
     const findings = checkSkills(fixture("broken-link"));
+    const unresolved = (target: string) =>
+      expect.objectContaining({ folder: "dangling", rule: "relative-links-resolve", message: expect.stringContaining(target) });
     expect(findings).toEqual([
-      expect.objectContaining({ folder: "dangling", rule: "relative-links-resolve", message: expect.stringContaining("missing.md") }),
-      expect.objectContaining({ folder: "dangling", rule: "relative-links-resolve", message: expect.stringContaining("scripts/absent.sh") }),
+      unresolved("missing.md"),
+      unresolved("scripts/absent.sh"),
+      unresolved("scripts/"),
+      unresolved("../../elsewhere.md"),
+      unresolved("nowhere.md"),
     ]);
   });
 });
 
 describe("this repository", () => {
   test("every skill under skills/ passes the structural check", () => {
-    expect(checkSkills(new URL("../../skills/", import.meta.url).pathname)).toEqual([]);
+    expect(checkSkills(here("../../skills/"))).toEqual([]);
   });
 });
