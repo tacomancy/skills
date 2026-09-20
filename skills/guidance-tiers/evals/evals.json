@@ -1,0 +1,31 @@
+{
+  "skill_name": "guidance-tiers",
+  "evals": [
+    {
+      "id": 1,
+      "name": "partially-populated-asks-nothing-overwrites-nothing",
+      "prompt": "Set up guidance tiers in this repository.",
+      "fixture": "fixtures/partial, copied into a fresh git repository with one commit",
+      "expected_output": "One question at most (the architecture document's name). Afterwards AGENTS.md, CONTEXT.md and both frozen files are byte-identical; the closing report lists them as found and names the required-status-check step for the owner.",
+      "assertions": [
+        "asks no question whose answer the repository already holds (artefact, guidance file)",
+        "AGENTS.md is byte-identical afterwards, with one '## Guidance tiers' heading",
+        "CONTEXT.md and docs/reference/* are byte-identical afterwards",
+        "the report has created / found / owner to-do, and the to-do names the required status check"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "empty-repo-with-artefact-outside",
+      "prompt": "Set up guidance tiers here. The design document is at ../outside/plan.md.",
+      "fixture": "an empty git repository with one commit, with fixtures/outside as its sibling directory",
+      "expected_output": "Asks the guidance-file and architecture-name questions in one message, the artefact being given; then scaffolds, runs the installed check, and reports the three lists.",
+      "assertions": [
+        "does not ask what or where the artefact is",
+        "asks the remaining questions in one message, at most two",
+        "the frozen tier holds plan.md by copy; the original is untouched",
+        "the installed check is run and passes"
+      ]
+    }
+  ]
+}

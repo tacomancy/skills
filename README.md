@@ -10,7 +10,7 @@ Each skill is a folder under `skills/` holding a `SKILL.md`; the skills are the 
 
 ## Skills
 
-- `guidance-tiers` — frozen and living documentation tiers with a precedence rule and a CI-enforced check. _In progress: the check script has landed; the scaffold follows._
+- `guidance-tiers` — frozen and living documentation tiers with a precedence rule and a CI-enforced check.
 
 ## Developing
 

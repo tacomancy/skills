@@ -5,11 +5,30 @@ import { describe, expect, test } from "vitest";
 import { FixtureRepo } from "./harness";
 
 // A design document that lives outside the repository, as a brief handed over usually does.
-function artefactOutside(): string {
+function artefactOutside(content = "# The brief\n\nWhat was decided at the start.\n"): string {
   const path = join(mkdtempSync(join(tmpdir(), "artefact-")), "brief.md");
-  writeFileSync(path, "# The brief\n\nWhat was decided at the start.\n");
+  writeFileSync(path, content);
   return path;
 }
+
+// A brief with a glossary table, the shape a design document most often carries its terms in.
+const briefWithGlossary = `# The brief
+
+## Goals
+
+Sell widgets.
+
+## Glossary
+
+| Term | Meaning | Notes |
+| --- | --- | --- |
+| Widget | The thing we sell. | |
+| Lot | A batch of widgets \`sold\` together. | see Widget |
+
+## Later
+
+Not a table.
+`;
 
 // The interview answered with the owner's own names for every piece.
 const customLayout = ["--frozen-dir", "docs/frozen", "--architecture", "docs/design.md", "--context", "GLOSSARY.md", "--adr-dir", "docs/decisions"];
@@ -195,5 +214,88 @@ describe("scaffold.sh in a partially populated repository", () => {
     expect(run.status).toBe(0);
     expect(repo.read("CLAUDE.md").match(/## Guidance tiers/g)).toHaveLength(1);
     expect(run.output).toContain("found: CLAUDE.md");
+  });
+});
+
+describe("scaffold.sh seeding the vocabulary file", () => {
+  test("from an artefact with a glossary table, carries its terms and where they came from", () => {
+    const repo = new FixtureRepo();
+    expect(repo.scaffold("--artefact", artefactOutside(briefWithGlossary), "--guidance", "CLAUDE.md").status).toBe(0);
+    const context = repo.read("CONTEXT.md");
+    expect(context).toMatch(/^# Vocabulary/);
+    expect(context).toContain("- **Widget** — The thing we sell.");
+    expect(context).toContain("- **Lot** — A batch of widgets `sold` together.");
+    expect(context).not.toMatch(/Term.*Meaning/);
+    expect(context).not.toContain("---");
+    expect(context).toContain("`brief.md`");
+  });
+
+  test("from an artefact without one, carries the rule line only", () => {
+    const repo = new FixtureRepo();
+    expect(repo.scaffold("--artefact", artefactOutside(), "--guidance", "CLAUDE.md").status).toBe(0);
+    const context = repo.read("CONTEXT.md");
+    expect(context).toMatch(/^# Vocabulary\n\n[^\n]+\n$/);
+    expect(context).toMatch(/lives here/);
+  });
+
+  test("leaves an existing vocabulary file alone even when the artefact has a glossary", () => {
+    const repo = new FixtureRepo();
+    repo.write({ "CONTEXT.md": "# Vocabulary\n\n- **Own** — the owner's term.\n" });
+    repo.scaffold("--artefact", artefactOutside(briefWithGlossary), "--guidance", "CLAUDE.md");
+    expect(repo.read("CONTEXT.md")).toBe("# Vocabulary\n\n- **Own** — the owner's term.\n");
+  });
+
+  test("reads the term and meaning columns by their headers, keeps escaped pipes, and skips rows without a meaning", () => {
+    const repo = new FixtureRepo();
+    const brief = `# Brief
+
+## Primary objects
+
+| # | Object | Description | Owner |
+|---|---|---|---|
+| 1 | Widget | The thing; \`a \\| b\` picks one. | ops |
+| 2 | Orphan | | ops |
+`;
+    repo.scaffold("--artefact", artefactOutside(brief), "--guidance", "CLAUDE.md");
+    const context = repo.read("CONTEXT.md");
+    expect(context).toContain("- **Widget** — The thing; `a | b` picks one.");
+    expect(context).not.toContain("**1**");
+    expect(context).not.toContain("Orphan");
+  });
+
+  test("withholds the seed from headings that merely mention a glossary, fenced code, and a second table's header", () => {
+    const repo = new FixtureRepo();
+    const brief = `# Brief
+
+## Non-glossary notes
+
+| Foo | Bar |
+|---|---|
+| foo | bar |
+
+## Glossary
+
+\`\`\`
+## Glossary
+| Fake | term |
+|---|---|
+| Fake | term |
+\`\`\`
+
+| Term | Meaning |
+|---|---|
+| Widget | The thing. |
+
+| Term | Meaning |
+|---|---|
+| Lot | A batch. |
+`;
+    repo.scaffold("--artefact", artefactOutside(brief), "--guidance", "CLAUDE.md");
+    const context = repo.read("CONTEXT.md");
+    expect(context).toContain("- **Widget** — The thing.");
+    expect(context).toContain("- **Lot** — A batch.");
+    expect(context).not.toContain("foo");
+    expect(context).not.toContain("Fake");
+    expect(context).not.toContain("**Term**");
   });
 });
