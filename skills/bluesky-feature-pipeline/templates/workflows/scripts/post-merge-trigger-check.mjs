@@ -2,8 +2,9 @@
 // Post-merge-trigger check: the guidance file's post-merge section names changes that
 // oblige an issue elsewhere — a public page to update, a document to amend. Each is a
 // trigger: a name for what it obliges and the path globs that fire it. A PR whose changed
-// files fire a trigger links the issue it opened for it, on a body line naming the trigger,
-// or this check fails naming the trigger. The landing session then has nothing to remember.
+// files fire a trigger links the issue it opened for it, on a body line naming the trigger
+// — or states `none` on that line — or this check fails naming the trigger. The landing
+// session then has nothing to remember.
 //
 // Reads (all set by the workflow or by Actions itself):
 //   GITHUB_EVENT_PATH     the pull_request event payload
@@ -15,7 +16,10 @@
 // Globs: `**` spans directories, `*` and `?` stay within one path segment, and a glob
 // with no `/` matches a file name at any depth. A link is a body line that leads with the
 // trigger's name (case-insensitive, after any list marker) and carries an issue reference:
-// `#N`, `owner/repo#N`, or an issue URL.
+// `#N`, `owner/repo#N`, or an issue URL. The same line with `none` in place of the
+// reference passes too: the change fired the path but not the condition — a glob may be
+// wider than what it stands for, and `none` is the filer stating that this change is
+// outside it. Anything beyond the bare word is not the none form.
 //
 // Exit 0 on pass, 1 with a FAIL line on a broken rule, 2 with an ERROR line when the
 // input is not something the check can judge — an unknown never passes.
@@ -115,24 +119,31 @@ async function check() {
   // reference; a name met mid-sentence beside some other reference is not a link.
   const lines = (pr.body ?? "").split("\n").map((line) => line.replace(/^\s*(?:[-*+]|\d+\.)?\s*/, "").trim());
   const issueReference = /(?:^|[^\w/])(?:[\w.-]+\/[\w.-]+)?#\d+\b|\/issues\/\d+\b/;
-  const linkFor = (name) => lines.find((line) => line.toLowerCase().startsWith(name.toLowerCase()) && issueReference.test(line.slice(name.length)));
+  // The none form is the bare word after the name and its separator; a trailing full stop
+  // is prose, `none yet` or `nonesuch` is not.
+  const noneForm = /^[\s:—–-]*none\.?$/i;
+  const lineWhere = (name, accepts) =>
+    lines.find((line) => line.toLowerCase().startsWith(name.toLowerCase()) && accepts(line.slice(name.length)));
 
   const problems = [];
-  const linked = [];
+  const answered = [];
   for (const trigger of configured) {
     const fired = files.filter((f) => trigger.globs.some((g) => g.test(f)));
     if (fired.length === 0) continue;
-    const link = linkFor(trigger.name);
-    if (link) linked.push(`${trigger.name} — ${link}`);
+    const link = lineWhere(trigger.name, (rest) => issueReference.test(rest));
+    const none = link ? undefined : lineWhere(trigger.name, (rest) => noneForm.test(rest));
+    if (link) answered.push(`${trigger.name} — ${link}`);
+    else if (none) answered.push(`${trigger.name} — none: the change is outside the condition, per '${none}'`);
     else {
       problems.push(
         `'${trigger.name}' fires on:\n        ${fired.join("\n        ")}\n` +
-          `      Open the issue it obliges and add a body line '${trigger.name}: <owner/repo>#<issue>'.`,
+          `      Open the issue it obliges and add a body line '${trigger.name}: <owner/repo>#<issue>',\n` +
+          `      or state that this change is outside the condition with '${trigger.name}: none'.`,
       );
     }
   }
-  if (problems.length > 0) fail(`post-merge trigger without a linked issue\n      ${problems.join("\n      ")}`);
-  process.stdout.write(linked.length === 0 ? "post-merge triggers ok: none fired\n" : `post-merge triggers ok, linked:\n  ${linked.join("\n  ")}\n`);
+  if (problems.length > 0) fail(`post-merge trigger without a linked issue or a none line\n      ${problems.join("\n      ")}`);
+  process.stdout.write(answered.length === 0 ? "post-merge triggers ok: none fired\n" : `post-merge triggers ok, answered:\n  ${answered.join("\n  ")}\n`);
 }
 
 if (configured.length === 0) {

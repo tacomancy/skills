@@ -48,6 +48,12 @@ describe("PR template", () => {
     expect(body).toMatch(/declined/i);
   });
 
+  // The checklist line shows both forms the post-merge-trigger check reads: the issue and `none`.
+  test("shows the post-merge trigger line in both its forms", () => {
+    expect(pr()).toContain("<trigger>: owner/repo#N");
+    expect(pr()).toContain("<trigger>: none");
+  });
+
   test("carries the one-ticket rule", () => {
     expect(pr()).toMatch(/other ticket/i);
   });

@@ -35,6 +35,15 @@ describe("ADOPTING.md", () => {
     for (const label of labels) expect(doc(), label).toContain(`\`${label}\``);
   });
 
+  // The none form is what lets a path-set trigger be wider than its condition; the document
+  // says so and shows this repository's one trigger as the example.
+  test("documents the none form, and the example's one trigger on every SKILL.md", () => {
+    const parameters = /^## Parameters[\s\S]*?(?=^## )/m.exec(doc())?.[0] ?? "";
+    expect(parameters).toContain("`<trigger>: none`");
+    expect(parameters).toContain("`site-description: skills/*/SKILL.md`");
+    expect(parameters).toContain("land-ticket");
+  });
+
   test("covers the open tickets, the label mapping, and branch protection as a diff", () => {
     const headings = doc().split("\n").filter((line) => /^## /.test(line));
     expect(headings).toEqual(expect.arrayContaining(["## Per template", "## Labels", "## Tickets already open", "## Branch protection"]));

@@ -19,7 +19,7 @@ Done when every installed file is at its path, the six status labels exist, ever
 **Example — `tacomancy/skills`.** The run was
 
 ```bash
-skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**'
+skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**' --trigger 'site-description: skills/*/SKILL.md'
 ```
 
 and it refused nothing: `.github/` held one workflow, `ci.yml`, whose name none of the pipeline's files share, and no templates. It created the eleven files and the six labels; a second run reported every one as `found`. The merge sections below were exercised by the collisions the skill's tests raise, not by this run.
@@ -34,7 +34,7 @@ Your template gains, and keeps everything else:
 
 - the closing-keyword line, `Closes #<ticket>`, as the first line a reader sees — the ticket-link check reads the keyword anywhere in the body, and the lifecycle mover and `land-ticket` read the same line, so first is for the reader;
 - a `## Code review` section with **Findings** and **Declined** — the heading `land-ticket`'s gate reads for the review's presence;
-- the one-ticket rule, and the checklist line for the post-merge trigger link — `<trigger>: owner/repo#N` — that the post-merge-trigger check reads.
+- the one-ticket rule, and the checklist line for the post-merge trigger — `<trigger>: owner/repo#N`, or `<trigger>: none` — that the post-merge-trigger check reads.
 
 Your own sections stay where they were; a section of yours that asks for the same thing as one of the pipeline's is replaced by the pipeline's wording, so the heading the gate reads is the one in the file.
 
@@ -84,9 +84,9 @@ Read the branch's current rules — `gh api repos/<owner>/<repo>/branches/<branc
 The script's values on a repository with history are read from what the repository already does rather than from the README's examples:
 
 - **Source and test globs** name the files the repository's test loop covers. A repository whose prose is reviewed by hand and whose scripts are tested names the scripts, so a prose-only PR passes the test-touch check without a waiver and a script change without a test change does not.
-- **Post-merge triggers** are path globs, and the check has no waiver: a fired trigger passes only with a linked issue. A trigger goes in when the glob *is* its condition — every change under those paths obliges the issue. A condition finer than a path set — a landing, a line inside a file, one section of the guidance file — stays with stage 8, where `land-ticket` reads the post-merge section against the diff, and the parameter is left empty for it; a glob wider than the condition would block the changes that oblige nothing, with no way through.
+- **Post-merge triggers** are path globs, and a fired trigger passes in two forms: a body line naming it with the issue it obliged, or the same line with `none` — `<trigger>: none` — which states that the change fired the path but not the condition. A trigger goes in when the glob *is* its condition — every change under those paths obliges the issue — and also when the glob is wider than the condition by a margin the filer can see and state: a change under the path either obliges the issue or is a `none`, and the line is the filer saying which. A condition with no path to it at all — a landing, an event with no diff — stays with stage 8, where `land-ticket` reads the post-merge section against the diff, and the parameter carries nothing for it.
 
-**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. No trigger: the guidance file's three site triggers are a landing, a description line inside `SKILL.md`, and the invariants section inside the guidance file, none of them a path set, so they stay with `land-ticket` as they were before adoption.
+**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. One trigger, `site-description: skills/*/SKILL.md`: the guidance file's site trigger on a skill's description line is a line inside `SKILL.md`, so the glob is wider than the condition, and the margin is what a filer states — a PR that edits a `SKILL.md` carries `site-description: tacomancy/tacomancy#N` when the description line moved, or `site-description: none` when the edit was prose below it. The other two site triggers, a landing and the invariants section of the guidance file, have no path that means them and stay with `land-ticket`, as before adoption.
 
 ## Upgrading
 
