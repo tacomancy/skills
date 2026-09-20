@@ -20,6 +20,7 @@ describe("install.sh in a fresh repository", () => {
     expect(repo.read(".github/workflows/post-merge-trigger-check.yml")).toContain(
       'POST_MERGE_TRIGGERS: "the public site: skills/*/SKILL.md; the invariants: CLAUDE.md"',
     );
+    expect(repo.read(".github/workflows/ticket-lifecycle-labels.yml")).toContain('UNCLAIMED_LABEL: "ready-for-agent"');
     expect(repo.exists(".github/README.md")).toBe(false);
   });
 });
@@ -157,6 +158,21 @@ describe("install.sh arguments", () => {
     const run = repo.install(...INSTALL_ARGS.filter((a) => a !== "--trigger" && !a.includes(":")));
     expect(run.status, run.output).toBe(0);
     expect(repo.read(".github/workflows/post-merge-trigger-check.yml")).toContain('POST_MERGE_TRIGGERS: ""');
+  });
+
+  // A triage set with no ready label leaves the mover nothing to lift; the workflow still runs.
+  test("no unclaimed label is a valid set: the workflow's value is empty, not a token", () => {
+    const repo = new AdoptingRepo();
+    const run = repo.install(...without("--unclaimed-label"));
+    expect(run.status, run.output).toBe(0);
+    expect(repo.read(".github/workflows/ticket-lifecycle-labels.yml")).toContain('UNCLAIMED_LABEL: ""');
+  });
+
+  test("an unclaimed label with a double quote is refused, since it sits in a quoted YAML string", () => {
+    const repo = new AdoptingRepo();
+    const run = repo.install(...INSTALL_ARGS.map((a) => (a === "ready-for-agent" ? 'ready "now"' : a)));
+    expect(run.status).not.toBe(0);
+    expect(repo.snapshot()).toEqual({});
   });
 
   // `&` and `|` mean something to the substitution's own tooling; the value lands as typed.

@@ -9,7 +9,7 @@ The tracker files the install script places in an adopting repository, laid out 
 | `pull_request_template.md` | `.github/pull_request_template.md` | a PR that names its ticket by a closing keyword and carries the review under `## Code review`, the heading the landing gate reads |
 | `workflows/*.yml` | `.github/workflows/*.yml` | one check each on every pull request; each YAML checks out and runs its script, nothing more |
 | `workflows/scripts/*.mjs` | `.github/workflows/scripts/*.mjs` | the checks' logic, one single-file Node script each, driven by the tests |
-| `workflows/ticket-lifecycle-labels.yml`, `workflows/scripts/ticket-lifecycle.mjs` | the same paths under `.github/` | the one workflow that is not a check: the lifecycle-label mover, `ticket:in-review` on the ticket at PR open, `ticket:landed` on it and a comment on the beat its `## Parent` names at merge |
+| `workflows/ticket-lifecycle-labels.yml`, `workflows/scripts/ticket-lifecycle.mjs` | the same paths under `.github/` | the one workflow that is not a check: the lifecycle-label mover, `ticket:in-review` on the ticket at PR open with the unclaimed label lifted, `ticket:landed` on it and a comment on the beat its `## Parent` names at merge |
 
 The issue templates are markdown with front matter rather than issue forms: a form renders each field as an `###` heading, and the workflows and `land-ticket` read the `##` sections `to-tickets` writes. This file stays here; it is not installed.
 
@@ -26,7 +26,7 @@ One label family per beat — `<prefix>/<beat>` — carried by the beat and ever
 
 ## The workflow parameters
 
-Each check reads its parameters from the `env` of its one `run` step; the YAML carries a token there and the install script writes the value. A script that finds its token unsubstituted, or its parameter missing, exits 2 with an `ERROR` line — an unknown never passes. Every value is one line, so the script substitutes it as it does the prefix.
+Each workflow reads its parameters from the `env` of its one `run` step; the YAML carries a token there and the install script writes the value. A script that finds its token unsubstituted, or its parameter missing, exits non-zero naming the parameter — an unknown never passes. Every value is one line, so the script substitutes it as it does the prefix.
 
 | Token | In | Value the install script writes |
 |---|---|---|
@@ -34,6 +34,7 @@ Each check reads its parameters from the `env` of its one `run` step; the YAML c
 | `{{SOURCE_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming the repository's source files — `src/**, lib/**/*.ts` as an example |
 | `{{TEST_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming its test files — `tests/**, **/*.test.ts` as an example |
 | `{{POST_MERGE_TRIGGERS}}` | `post-merge-trigger-check.yml` | the guidance file's post-merge section as `<name>: <glob>, <glob>; <name>: <glob>` — one trigger per `;`, named for what it obliges, with the paths that fire it; empty when the section names none. `the public site: skills/*/SKILL.md; the invariants: CLAUDE.md` as an example of the shape; a glob goes in only when it *is* the condition, and [`ADOPTING.md`](../ADOPTING.md) § Parameters says why this repository installs none |
+| `{{UNCLAIMED_LABEL}}` | `ticket-lifecycle-labels.yml` | the triage set's ready label, the unclaimed state a ticket carries until a session claims it — `ready-for-agent` as an example, the one the ticket template applies; empty when the set has none, and the mover then lifts nothing at open |
 
 Globs, in both scripts: `**` spans directories, `*` and `?` stay within one path segment, and a glob with no `/` matches a file name at any depth. Names and globs carry no `,`, `;`, or `:` beyond the separators, and no `"`, since the value sits in a double-quoted YAML string.
 
@@ -45,8 +46,8 @@ What each check reads from the PR, so a filer knows what passes it:
 
 ## The lifecycle mover
 
-`ticket-lifecycle-labels.yml` takes no parameter; its script reads what Actions sets — the event payload at `GITHUB_EVENT_PATH`, `GITHUB_REPOSITORY`, `GITHUB_API_URL` — and the token the YAML passes as `GITHUB_TOKEN`, and needs `issues: write`.
+`ticket-lifecycle-labels.yml` takes one parameter, `UNCLAIMED_LABEL`, from the table above; its script otherwise reads what Actions sets — the event payload at `GITHUB_EVENT_PATH`, `GITHUB_REPOSITORY`, `GITHUB_API_URL` — and the token the YAML passes as `GITHUB_TOKEN`, and needs `issues: write`.
 
-The lifecycle mover finds the tickets by the PR body's closing keywords — every one, as GitHub and the ticket-link check read them — and the beat by the ticket's `## Parent` section alone — the first `#<n>` or `/issues/<n>` inside it, matched as a number, never a `Spec:` line or a reference elsewhere in the body. It reads the ticket's labels through every page before it writes, holds one lifecycle label at a time — the other of `ticket:in-review` and `ticket:landed` goes when present, the target comes when absent — and leaves `ticket:blocked` as the side state it is. It writes labels and comments and nothing else: no call closes or reopens an issue or touches a `spec:` label. A PR with no closing keyword, or closed without merging, moves nothing; a tracker error fails the run.
+The lifecycle mover finds the tickets by the PR body's closing keywords — every one, as GitHub and the ticket-link check read them — and the beat by the ticket's `## Parent` section alone — the first `#<n>` or `/issues/<n>` inside it, matched as a number, never a `Spec:` line or a reference elsewhere in the body. It reads the ticket's labels through every page before it writes, holds one lifecycle label at a time — the other of `ticket:in-review` and `ticket:landed` goes when present, the target comes when absent — and leaves `ticket:blocked` as the side state it is. The PR opening is the claim: at open it also lifts the unclaimed label when the ticket carries it, so a ticket in review never reads as grabbable; a ticket without it, or an empty parameter, lifts nothing. Merge leaves that label alone. It writes labels and comments and nothing else: no call closes or reopens an issue or touches a `spec:` label. A PR with no closing keyword, or closed without merging, moves nothing; a tracker error fails the run.
 
 The repository's `tests/bluesky-feature-pipeline/` holds the shape of each template, the placeholder contract, and each script's behaviour driven with fixture payloads against a served API.
