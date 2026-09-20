@@ -44,15 +44,23 @@ gh pr merge <PR> --merge --delete-branch
 
 Then check out the base locally and pull. Done when the base's tip is the merge: `git log -1` on the base shows the merge commit, the squash, or the rebased head, matching the style read.
 
-## 3. Close the ticket
+## 3. Close
 
-The PR body names its ticket as "Implements #N", which closes nothing on its own. Close the ticket with one comment naming the PR:
+**Close** the ticket with one comment naming the PR, whatever the PR body said — a closing keyword, "Implements #N", or nothing at all — so the ticket's state rests on this step rather than on the body's wording. Then read the ticket's parent and list every child of the parent, closed ones included: when every other child reads closed, close the parent with one comment listing each child's PR — this one's, and for each sibling the PR its own closing comment names; while any child is open, leave the parent alone and count the open ones for the report.
+
+The ticket, its parent, and its siblings are the shape `to-tickets` produces: a `## Parent` section naming the parent issue, `## Blocked by` edges, and one label family per skill (`skill/<name>`, as an example) that the parent carries beside its `spec` label and every child carries alone. A ticket with no `## Parent` section has no parent, and the step ends at the ticket's close. Without `to-tickets`, the ticket is the PR's linked issue, closed the same way, and there is no parent step.
 
 ```bash
+# gh, as an example of close-with-comment, read-the-parent, list-its-children
 gh issue close <N> --comment "Landed in #<PR>."
+gh issue view <N> --json body --jq '.body' | sed -n '/^## Parent/,/^## /p'
+gh issue list --label "skill/<name>" --state all --limit 500 --json number,state \
+  --jq '.[] | select(.number != <P>) | "\(.number) \(.state)"'
+gh issue view <N1> --json comments --jq '.comments[].body' | grep -o 'Landed in #[0-9]*'
+gh issue close <P> --comment "All children landed: #<PR1> (#<N1>), #<PR2> (#<N2>), #<PR3> (#<N3>)."
 ```
 
-Leave the spec issue open; it closes with the skill's publish ticket. Done when the ticket reads closed and the spec reads open.
+Done when the ticket reads closed and the parent's state is stated: closed with the PR list, or open with the count of children still open.
 
 ## 4. Site issue
 
@@ -76,4 +84,4 @@ for each open ticket under the same `skill/<name>` label. Done when the report n
 
 ## Report
 
-Five lines: the merge commit, the ticket closed, the site issue opened or "no trigger fired", the frontier, and anything handed back from the gate — or that the branch was updated first.
+Five lines: the merge commit, the ticket closed and the parent's state, the site issue opened or "no trigger fired", the frontier, and anything handed back from the gate — or that the branch was updated first.

@@ -26,6 +26,32 @@
         "the report's last line says the branch was updated first",
         "hand back is reserved for a red check or a conflicting update, neither of which the fixture presents"
       ]
+    },
+    {
+      "id": 3,
+      "name": "middle-child-leaves-the-parent-open-and-counts-the-remaining",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set, with the tracker answering as its § Tracker answers and § Close answers say: PR #12 merges, #9 closes, and the parent #7 still has #11 open",
+      "expected_output": "#9 is closed with one comment naming PR #12, although the body's \"Implements #9\" is no closing keyword; the parent #7 is read from #9's Parent section, its children listed, #11 found open, and #7 left open with the report saying one child remains.",
+      "assertions": [
+        "#9 is closed with a comment naming PR #12, and the body's wording is not relied on to close it",
+        "the parent is read from the ticket and its children are listed before any decision about it",
+        "#7 is left open because #11 is still open",
+        "the report states the parent's state as open with one child remaining"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "last-child-closes-the-parent-with-every-childs-pr",
+      "prompt": "Land PR #14.",
+      "fixture": "fixtures/ticket-set § Variant — last child, with the tracker answering as that section says: merge state CLEAN, PR #14 merges, #11 closes, and every child of #7 then reads closed",
+      "expected_output": "#11 is closed with one comment naming PR #14; the parent #7 is read, its children #8, #9, #11 all found closed, and #7 is closed with one comment listing PRs #10, #12 and #14.",
+      "assertions": [
+        "#11 is closed with a comment naming PR #14",
+        "#7 is closed only after every child is found closed",
+        "the closing comment on #7 lists all three PRs: #10, #12, #14",
+        "the report states the parent's state as closed with the PR list"
+      ]
     }
   ]
 }
