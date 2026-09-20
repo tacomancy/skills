@@ -43,7 +43,7 @@ Never silently violate these:
 `tacomancy.com/skills/` is authored in `tacomancy/tacomancy`, not here. The page carries a status line (which specs are written, which skill is in tickets, what is installable), the seven skills each with a one-line description, and the invariants above. Before merge, if the branch did any of the following, open an issue there — `gh issue create --repo tacomancy/tacomancy` — naming this PR and what the page should now say:
 
 - landed a skill, so the install line works for it and the status line moves;
-- added, removed, or renamed a skill, or changed the one line its `SKILL.md` frontmatter describes it with;
+- added, removed, or renamed a skill, or changed the one line its `SKILL.md` frontmatter describes it with — the `site-description` trigger the post-merge-trigger check takes against every `skills/*/SKILL.md` change: the PR body carries `site-description: tacomancy/tacomancy#N`, or `site-description: none` when the edit left that line as it was;
 - changed an invariant in § Invariants.
 
 Never edit the site from this repository.

@@ -119,9 +119,9 @@ async function check() {
   // reference; a name met mid-sentence beside some other reference is not a link.
   const lines = (pr.body ?? "").split("\n").map((line) => line.replace(/^\s*(?:[-*+]|\d+\.)?\s*/, "").trim());
   const issueReference = /(?:^|[^\w/])(?:[\w.-]+\/[\w.-]+)?#\d+\b|\/issues\/\d+\b/;
-  // The none form is the bare word after the name and its separator; a trailing full stop
-  // is prose, `none yet` or `nonesuch` is not.
-  const noneForm = /^[\s:—–-]*none\.?$/i;
+  // The none form is the bare word after the name and a separator; a trailing full stop
+  // is punctuation and passes, `none yet` and `nonesuch` do not.
+  const noneForm = /^[\s:—–-]+none\.?$/i;
   const lineWhere = (name, accepts) =>
     lines.find((line) => line.toLowerCase().startsWith(name.toLowerCase()) && accepts(line.slice(name.length)));
 

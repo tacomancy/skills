@@ -27,8 +27,8 @@ describe("the installed copies under .github/", () => {
 
   // The one trigger a path can express here: every SKILL.md may change its description line.
   test("post-merge-trigger-check.yml carries the site-description trigger on every SKILL.md", () => {
-    const yaml = parseYaml(installed("workflows/post-merge-trigger-check.yml")) as { jobs: Record<string, { steps: { env?: Record<string, string> }[] }> };
-    const env = Object.values(yaml.jobs)[0].steps[1].env ?? {};
-    expect(env.POST_MERGE_TRIGGERS).toBe("site-description: skills/*/SKILL.md");
+    const yaml = parseYaml(installed("workflows/post-merge-trigger-check.yml")) as { jobs: Record<string, { steps: { run?: string; env?: Record<string, string> }[] }> };
+    const run = Object.values(yaml.jobs)[0].steps.find((step) => step.run);
+    expect(run?.env?.POST_MERGE_TRIGGERS).toBe("site-description: skills/*/SKILL.md");
   });
 });

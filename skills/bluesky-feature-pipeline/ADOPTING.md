@@ -19,10 +19,10 @@ Done when every installed file is at its path, the six status labels exist, ever
 **Example — `tacomancy/skills`.** The run was
 
 ```bash
-skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**' --trigger 'site-description: skills/*/SKILL.md'
+skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**'
 ```
 
-and it refused nothing: `.github/` held one workflow, `ci.yml`, whose name none of the pipeline's files share, and no templates. It created the eleven files and the six labels; a second run reported every one as `found`. The merge sections below were exercised by the collisions the skill's tests raise, not by this run.
+and it refused nothing: `.github/` held one workflow, `ci.yml`, whose name none of the pipeline's files share, and no templates. It created the eleven files and the six labels; a second run reported every one as `found`. The trigger in § Parameters was added afterwards, by hand, to the installed workflow's `env` — the one line a rerun with `--trigger` would have written. The merge sections below were exercised by the collisions the skill's tests raise, not by this run.
 
 ## Per template
 
@@ -86,7 +86,7 @@ The script's values on a repository with history are read from what the reposito
 - **Source and test globs** name the files the repository's test loop covers. A repository whose prose is reviewed by hand and whose scripts are tested names the scripts, so a prose-only PR passes the test-touch check without a waiver and a script change without a test change does not.
 - **Post-merge triggers** are path globs, and a fired trigger passes in two forms: a body line naming it with the issue it obliged, or the same line with `none` — `<trigger>: none` — which states that the change fired the path but not the condition. A trigger goes in when the glob *is* its condition — every change under those paths obliges the issue — and also when the glob is wider than the condition by a margin the filer can see and state: a change under the path either obliges the issue or is a `none`, and the line is the filer saying which. A condition with no path to it at all — a landing, an event with no diff — stays with stage 8, where `land-ticket` reads the post-merge section against the diff, and the parameter carries nothing for it.
 
-**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. One trigger, `site-description: skills/*/SKILL.md`: the guidance file's site trigger on a skill's description line is a line inside `SKILL.md`, so the glob is wider than the condition, and the margin is what a filer states — a PR that edits a `SKILL.md` carries `site-description: tacomancy/tacomancy#N` when the description line moved, or `site-description: none` when the edit was prose below it. The other two site triggers, a landing and the invariants section of the guidance file, have no path that means them and stay with `land-ticket`, as before adoption.
+**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. One trigger, `site-description: skills/*/SKILL.md`: the guidance file's site trigger on a skill's description line is a line inside `SKILL.md`, so the glob is wider than the condition, and the margin is what a filer states — a PR that edits a `SKILL.md` carries `site-description: tacomancy/tacomancy#N` when the description line moved, or `site-description: none` when the edit was prose below it. The landing has no path that means it and stays with `land-ticket`; the invariants section of the guidance file could go in the same way, as `the invariants: CLAUDE.md` with a `none` on every other guidance edit, and stays with `land-ticket` too for now — one trigger installed, the second when its `none` lines would be fewer than the landings that miss it.
 
 ## Upgrading
 
