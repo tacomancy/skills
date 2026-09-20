@@ -75,8 +75,8 @@ async function move(api, pr, ticket, target, unclaimed) {
   // opening is the claim, so the unclaimed label goes with the move into review.
   const previous = target === LANDED ? IN_REVIEW : LANDED;
   const labels = (await api.list(`issues/${ticket}/labels`)).map((label) => label.name);
-  const lifted = [previous, ...(target === IN_REVIEW && unclaimed ? [unclaimed] : [])];
-  for (const label of lifted) {
+  const toLift = [previous, ...(target === IN_REVIEW && unclaimed ? [unclaimed] : [])];
+  for (const label of toLift) {
     if (labels.includes(label)) await api.delete(`issues/${ticket}/labels/${encodeURIComponent(label)}`);
   }
   if (!labels.includes(target)) await api.post(`issues/${ticket}/labels`, { labels: [target] });

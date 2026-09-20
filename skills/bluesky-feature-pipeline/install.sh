@@ -37,7 +37,8 @@ while [ $# -gt 0 ]; do
 done
 
 # Every value sits in a double-quoted YAML string on one line, and each script exits on a
-# blank or malformed parameter; a wrong value fails here rather than on the first PR.
+# malformed parameter — a blank one too, except the unclaimed label, where blank means the
+# adopter has none; a wrong value fails here rather than on the first PR.
 [ -n "$prefix" ] && [ -n "$source_globs" ] && [ -n "$test_globs" ] || usage
 one_line() {
   case "$2" in

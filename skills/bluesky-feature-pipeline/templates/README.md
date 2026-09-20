@@ -26,7 +26,7 @@ One label family per beat — `<prefix>/<beat>` — carried by the beat and ever
 
 ## The workflow parameters
 
-Each workflow reads its parameters from the `env` of its one `run` step; the YAML carries a token there and the install script writes the value. A script that finds its token unsubstituted, or its parameter missing, exits non-zero naming the parameter — an unknown never passes. Every value is one line, so the script substitutes it as it does the prefix.
+Each workflow reads its parameters from the `env` of its one `run` step; the YAML carries a token there and the install script writes the value. A check that finds its token unsubstituted, or its parameter missing, exits 2 with an `ERROR` line, and the mover fails its run naming the parameter — an unknown never passes. Every value is one line, so the script substitutes it as it does the prefix.
 
 | Token | In | Value the install script writes |
 |---|---|---|
