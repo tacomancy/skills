@@ -31,7 +31,7 @@ Each stage below states the same six things: who owns it, what it starts from, w
 - **Starts from**: a repository, with or without history.
 - **Produces**: the atomic skills the adopter wants installed; the issue templates, PR template, and workflows placed; the label set created; branch protection configured.
 - **Authority ends** when the checklist is done. No feature work starts here.
-- **Skill**: this skill's `install.sh` places the templates and workflows and creates the labels, asking for the **family** prefix — `skill/<name>`, as an example — at install; the checklist in [`BRANCH_PROTECTION.md`](BRANCH_PROTECTION.md) is the remainder the script cannot do, each item with its reason. When the script exits naming a file it did not write, the repository has history: `ADOPTING.md` states the merge path, per file, and the path for tickets already open.
+- **Skill**: this skill's `install.sh` places the templates and workflows and creates the labels, asking for the **family** prefix — `skill/<name>`, as an example — at install; the checklist in [`BRANCH_PROTECTION.md`](BRANCH_PROTECTION.md) is the remainder the script cannot do, each item with its reason. When the script exits naming a file it did not write, the repository has history: [`ADOPTING.md`](ADOPTING.md) states the merge path per file, the mapping of the labels the repository already has, and the path for tickets already open.
 - **Without it**: none — the script ships with this skill.
 
 ## 1. Operating picture

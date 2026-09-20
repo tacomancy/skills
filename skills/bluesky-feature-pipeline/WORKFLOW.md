@@ -11,7 +11,7 @@ Each stage ends where the next one can check it started right: a brief with its 
 ## 0. Setup — once per repository
 
 - [ ] Install the atomic skills you want the stages to use.
-- [ ] Run this skill's `install.sh`, giving it the **family** label prefix — `skill/<name>`, as an example — and the source and test globs; it places the issue templates, PR template, and workflows and creates the labels. When it exits naming a file it did not write, the repository has history: follow `ADOPTING.md` for that file.
+- [ ] Run this skill's `install.sh`, giving it the **family** label prefix — `skill/<name>`, as an example — and the source and test globs; it places the issue templates, PR template, and workflows and creates the labels. When it exits naming a file it did not write, the repository has history: follow [`ADOPTING.md`](ADOPTING.md) — move the file aside, rerun, merge it back — and its label and open-ticket sections.
 - [ ] Configure branch protection on the integration branch from [`BRANCH_PROTECTION.md`](BRANCH_PROTECTION.md), each item for its stated reason.
 
 **Your move**: do this yourself, before any feature work. It is the one stage with no session.

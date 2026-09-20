@@ -15,6 +15,8 @@ A skill exists because a GitHub issue labelled `spec` says what it does; nothing
 
 Specs #2–#5 are blocked on #1, which lands the repository skeleton (test project, structural checks, CI). Vendored skill names above are the `.agents/skills/` ones; see § Setup.
 
+This loop is stages 6–8 of **`bluesky-feature-pipeline`**, this repository's own skill, adopted here through its `ADOPTING.md`: specs are beats, tickets carry `skill/<name>` and `## Parent`, the workflows in `.github/workflows/` beside `ci.yml` gate every PR and move the `ticket:` labels, and a spec found wrong is flagged with `ticket:blocked`, never built around.
+
 ## Writing standard
 
 - Write every `SKILL.md` with **`writing-for-agents`**: steps in the file, reference behind pointers, leading words over restatement, the positive instruction over the prohibition.

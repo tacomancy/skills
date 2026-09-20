@@ -33,7 +33,7 @@ Each check reads its parameters from the `env` of its one `run` step; the YAML c
 | `{{FAMILY_PREFIX}}` | `ticket-link-check.yml` | the family prefix, as above; the YAML supplies the `/` |
 | `{{SOURCE_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming the repository's source files — `src/**, lib/**/*.ts` as an example |
 | `{{TEST_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming its test files — `tests/**, **/*.test.ts` as an example |
-| `{{POST_MERGE_TRIGGERS}}` | `post-merge-trigger-check.yml` | the guidance file's post-merge section as `<name>: <glob>, <glob>; <name>: <glob>` — one trigger per `;`, named for what it obliges, with the paths that fire it; empty when the section names none. `the public site: skills/*/SKILL.md; the invariants: CLAUDE.md` as this repository's example |
+| `{{POST_MERGE_TRIGGERS}}` | `post-merge-trigger-check.yml` | the guidance file's post-merge section as `<name>: <glob>, <glob>; <name>: <glob>` — one trigger per `;`, named for what it obliges, with the paths that fire it; empty when the section names none. `the public site: skills/*/SKILL.md; the invariants: CLAUDE.md` as an example of the shape; a glob goes in only when it *is* the condition, and [`ADOPTING.md`](../ADOPTING.md) § Parameters says why this repository installs none |
 
 Globs, in both scripts: `**` spans directories, `*` and `?` stay within one path segment, and a glob with no `/` matches a file name at any depth. Names and globs carry no `,`, `;`, or `:` beyond the separators, and no `"`, since the value sits in a double-quoted YAML string.
 
