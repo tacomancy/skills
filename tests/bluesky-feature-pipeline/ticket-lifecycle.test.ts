@@ -41,6 +41,23 @@ describe("PR merged", () => {
   });
 });
 
+describe("PR merged — every ticket the closing keywords name", () => {
+  // GitHub closes each one and the ticket-link check validates each one; the mover moves each one.
+  test("two closing keywords move two tickets and comment on each beat", async () => {
+    tracker = await new Tracker({
+      3: {},
+      4: {},
+      12: { body: "## Parent\n\n#3\n", labels: ["ticket:in-review"] },
+      13: { body: "## Parent\n\n#4\n", labels: ["ticket:in-review"] },
+    }).start();
+    expect(await tracker.run(prEvent("closed", { merged: true, number: 41, body: "Closes #12\nFixes #13\nCloses #12" }))).toMatchObject({ status: 0 });
+    expect(tracker.labelsAdded(12)).toEqual(["ticket:landed"]);
+    expect(tracker.labelsAdded(13)).toEqual(["ticket:landed"]);
+    expect(tracker.comments(3)).toHaveLength(1);
+    expect(tracker.comments(4)).toHaveLength(1);
+  });
+});
+
 describe("PR merged — the ticket's labels", () => {
   const ticketBody = "## Parent\n\n#3\n";
 

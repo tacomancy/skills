@@ -11,8 +11,9 @@ import { readFileSync } from "node:fs";
 
 const IN_REVIEW = "ticket:in-review";
 const LANDED = "ticket:landed";
-// The one PR-body line the pipeline's PR template asks for.
-const CLOSING_KEYWORD = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(\d+)\b/i;
+// The one PR-body line the pipeline's PR template asks for; every occurrence counts,
+// as it does for GitHub and the ticket-link check.
+const CLOSING_KEYWORD = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+#(\d+)\b/gi;
 // The first issue reference inside the ticket's `## Parent` section, as `#12` or a URL.
 const ISSUE_REF = /(?:#|\/issues\/)(\d+)\b/;
 
@@ -22,9 +23,8 @@ function env(name) {
   return value;
 }
 
-function ticketNumber(prBody) {
-  const match = CLOSING_KEYWORD.exec(prBody || "");
-  return match ? Number(match[1]) : null;
+function ticketNumbers(prBody) {
+  return [...new Set([...(prBody || "").matchAll(CLOSING_KEYWORD)].map((match) => Number(match[1])))];
 }
 
 // The `## Parent` section is the one place a ticket names its beat; nothing else in the
@@ -43,12 +43,16 @@ async function main() {
     console.log(`nothing to move for action "${event.action}"`);
     return;
   }
-  const ticket = ticketNumber(pr.body);
-  if (ticket === null) {
+  const tickets = ticketNumbers(pr.body);
+  if (tickets.length === 0) {
     console.log("no closing keyword names a ticket; nothing to move");
     return;
   }
   const api = tracker(env("GITHUB_API_URL"), env("GITHUB_REPOSITORY"), env("GITHUB_TOKEN"));
+  for (const ticket of tickets) await move(api, pr, ticket, target);
+}
+
+async function move(api, pr, ticket, target) {
   // The current labels decide each write, so a rerun or a ticket claimed some other way
   // neither duplicates a label nor fails removing one that is not there. A ticket holds
   // one lifecycle label at a time; `ticket:blocked` is a side state and stays.
