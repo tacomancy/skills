@@ -1,0 +1,9 @@
+{
+  "name": "lantern",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter core dev & pnpm --filter shell dev",
+    "test": "vitest run"
+  }
+}
