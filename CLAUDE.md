@@ -35,6 +35,16 @@ Never silently violate these:
 - Vendored third-party skills are never edited. Extension goes through the new skill's own trigger description, or one line in the adopting repository's guidance file.
 - Tests ship separately from skills: `tests/` mirrors `skills/` so an install carries no test code.
 
+## The public site
+
+`tacomancy.com/skills/` is authored in `tacomancy/tacomancy`, not here. The page carries a status line (which specs are written, which skill is in tickets, what is installable), the five skills each with a one-line description, and the invariants above. Before merge, if the branch did any of the following, open an issue there — `gh issue create --repo tacomancy/tacomancy` — naming this PR and what the page should now say:
+
+- landed a skill, so the install line works for it and the status line moves;
+- added, removed, or renamed a skill, or changed the one line its `SKILL.md` frontmatter describes it with;
+- changed an invariant in § Invariants.
+
+Never edit the site from this repository.
+
 ## Setup
 
 Vendor the loop's skills once per clone with `npx skills add mattpocock/skills`, picking `to-spec`, `to-tickets`, `implement`, `tdd`, `code-review`, `writing-for-agents`, `grill-me`; they land in `.agents/skills/` with symlinks in `.claude/skills/` and a `skills-lock.json`, the same arrangement as Vitrine. `skill-creator` is Anthropic's and needs no vendoring.
