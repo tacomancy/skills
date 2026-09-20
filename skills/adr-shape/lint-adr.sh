@@ -6,8 +6,11 @@
 # file conforms, 2 when it was not given anything to lint.
 #
 # Usage: lint-adr.sh <file-or-directory>...
-#   A directory stands for every NNNN-*.md in it. Bash + coreutils only, so a repository
-#   can call it from its own check (guidance-tiers' check-guidance.sh, for one).
+#   A directory is checked for numbering — four digits from 0000 (the template), no gap,
+#   no duplicate, every entry NNNN-*.md — and every ADR in it is linted; the template at
+#   0000 counts for numbering but is not linted for shape, since its placeholders are not
+#   an ADR. Bash + coreutils only, so a repository can call it from its own check
+#   (guidance-tiers' check-guidance.sh, for one).
 
 set -euo pipefail
 fail=0
@@ -114,14 +117,40 @@ lint_file() {
   [ $seen_consequences -eq 1 ] || bad "missing section: ## Consequences"
 }
 
+# Numbering is the rule guidance-tiers' check-guidance.sh applies to the same directory,
+# kept word for word so a repository running both checks gets one answer: NNNN from 0000
+# (the template) with no gap and no duplicate, so two branches cannot both claim a number
+# and merge; every entry NNNN-*.md, since a file the numbering cannot see would otherwise
+# slip through. The gap is reported once, at the first: every later number is off by the
+# same amount. The directory's own findings name the directory; a stray file names itself.
+lint_dir() {
+  dir="${1%/}"
+  nums=""
+  for entry in "$dir"/*; do
+    [ -e "$entry" ] || continue
+    name="${entry##*/}"
+    case "$name" in
+      [0-9][0-9][0-9][0-9]-*.md) nums="$nums ${name%%-*}" ;;
+      *) file="$entry"; bad "not named NNNN-*.md" ;;
+    esac
+  done
+  file="$dir"
+  for dupe in $(printf '%s\n' $nums | sort | uniq -d); do bad "duplicate ADR number: $dupe"; done
+  expected=0
+  for n in $(printf '%s\n' $nums | sort -u); do
+    if [ "$((10#$n))" -ne "$expected" ]; then
+      bad "ADR numbering gap at $n (expected $(printf '%04d' "$expected"))"; break
+    fi
+    expected=$((expected + 1))
+  done
+  for entry in "$dir"/[0-9][0-9][0-9][0-9]-*.md; do
+    [ -e "$entry" ] || continue
+    case "${entry##*/}" in 0000-*) ;; *) lint_file "$entry" ;; esac
+  done
+}
+
 [ "$#" -gt 0 ] || { printf 'usage: lint-adr.sh <file-or-directory>...\n' >&2; exit 2; }
 for target in "$@"; do
-  if [ -d "$target" ]; then
-    for entry in "$target"/[0-9][0-9][0-9][0-9]-*.md; do
-      [ -e "$entry" ] && lint_file "$entry"
-    done
-  else
-    lint_file "$target"
-  fi
+  if [ -d "$target" ]; then lint_dir "$target"; else lint_file "$target"; fi
 done
 exit "$fail"
