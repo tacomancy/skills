@@ -61,9 +61,12 @@ describe("PR template", () => {
 describe("placeholders", () => {
   const files = allTemplateFiles().filter((path) => path !== "README.md");
 
+  // A workflow's `${{ … }}` is an Actions expression, not a token: the `$` sets it apart.
+  const TOKEN = /(?<!\$)\{\{[^}]*\}\}/g;
+
   test("the family prefix is the only substitution point, in every template", () => {
     for (const path of files) {
-      const tokens = readRaw(path).match(/\{\{[^}]*\}\}/g) ?? [];
+      const tokens = readRaw(path).match(TOKEN) ?? [];
       expect(tokens.every((token) => token === PLACEHOLDER), `${path} has ${tokens.join(", ")}`).toBe(true);
     }
   });
@@ -82,7 +85,7 @@ describe("placeholders", () => {
 
   test("substituting the prefix leaves nothing for a second run to change", () => {
     for (const path of files) {
-      expect(readRaw(path).replaceAll(PLACEHOLDER, "skill")).not.toMatch(/\{\{|\}\}/);
+      expect(readRaw(path).replaceAll(PLACEHOLDER, "skill")).not.toMatch(TOKEN);
     }
   });
 
