@@ -21,7 +21,7 @@ Emit the note in the shape below and stop. Done when the note is the whole reply
 
 ## The reversibility test
 
-Reversing an item is what is being priced, never doing it. Cost-to-reverse is the whole test.
+Reversing an item is what is being priced, never doing it, and it is priced as of the item having shipped: the round is read as if every item were already in users' hands. Cost-to-reverse is the whole test.
 
 An item is **sticky** when reversing it would:
 
@@ -30,7 +30,7 @@ An item is **sticky** when reversing it would:
 - **users will touch it** — rename or move something users already touch in their own files;
 - **forces a fork** — leave a fork to maintain.
 
-An item is **trivial** when reversing it is a code change behind one module, a number in code, a dependency swap with the same interface, a UI arrangement, or anything not yet shipped to anyone.
+An item is **trivial** when reversing it is a code change behind one module, a number in code, a dependency swap with the same interface, a UI arrangement, or anything the round keeps out of any release.
 
 ## Honesty rules
 

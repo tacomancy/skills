@@ -6,7 +6,7 @@
       "name": "six-items-two-sticky",
       "prompt": "Rank these by reversibility.",
       "fixture": "fixtures/six-two-sticky/round.md, pasted in full after the prompt",
-      "expected_output": "A note in the fixed shape: a heading line; items 2 and 5 as the sticky items, each with a kind and a one-line why; one Trivial line naming 1, 3, 4 and 6; an indented to reverse / cheaper now pair under each of 2 and 5. Nothing before the heading and nothing after the last pair.",
+      "expected_output": "A note in the fixed shape: a heading line; items 2 and 5 as the sticky items, each with a kind and a one-line why; one Trivial line naming 1, 3, 4 and 6; then an indented to reverse / cheaper now pair for each of 2 and 5. Nothing before the heading and nothing after the last pair.",
       "assertions": [
         "items 2 and 5 rank sticky, and no other item does",
         "items 1, 3, 4 and 6 appear together in a single Trivial line",
