@@ -244,4 +244,58 @@ describe("scaffold.sh seeding the vocabulary file", () => {
     repo.scaffold("--artefact", artefactOutside(briefWithGlossary), "--guidance", "CLAUDE.md");
     expect(repo.read("CONTEXT.md")).toBe("# Vocabulary\n\n- **Own** — the owner's term.\n");
   });
+
+  test("reads the term and meaning columns by their headers, keeps escaped pipes, and skips rows without a meaning", () => {
+    const repo = new FixtureRepo();
+    const brief = `# Brief
+
+## Primary objects
+
+| # | Object | Description | Owner |
+|---|---|---|---|
+| 1 | Widget | The thing; \`a \\| b\` picks one. | ops |
+| 2 | Orphan | | ops |
+`;
+    repo.scaffold("--artefact", artefactOutside(brief), "--guidance", "CLAUDE.md");
+    const context = repo.read("CONTEXT.md");
+    expect(context).toContain("- **Widget** — The thing; `a | b` picks one.");
+    expect(context).not.toContain("**1**");
+    expect(context).not.toContain("Orphan");
+  });
+
+  test("withholds the seed from headings that merely mention a glossary, fenced code, and a second table's header", () => {
+    const repo = new FixtureRepo();
+    const brief = `# Brief
+
+## Non-glossary notes
+
+| Foo | Bar |
+|---|---|
+| foo | bar |
+
+## Glossary
+
+\`\`\`
+## Glossary
+| Fake | term |
+|---|---|
+| Fake | term |
+\`\`\`
+
+| Term | Meaning |
+|---|---|
+| Widget | The thing. |
+
+| Term | Meaning |
+|---|---|
+| Lot | A batch. |
+`;
+    repo.scaffold("--artefact", artefactOutside(brief), "--guidance", "CLAUDE.md");
+    const context = repo.read("CONTEXT.md");
+    expect(context).toContain("- **Widget** — The thing.");
+    expect(context).toContain("- **Lot** — A batch.");
+    expect(context).not.toContain("foo");
+    expect(context).not.toContain("Fake");
+    expect(context).not.toContain("**Term**");
+  });
 });

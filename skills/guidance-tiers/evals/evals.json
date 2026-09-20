@@ -5,8 +5,8 @@
       "id": 1,
       "name": "partially-populated-asks-nothing-overwrites-nothing",
       "prompt": "Set up guidance tiers in this repository.",
-      "fixture": "a repository with docs/reference/{README.md,brief.md}, AGENTS.md carrying a '## Guidance tiers' section, and CONTEXT.md with one term; no architecture document, no ADR directory, no check script",
-      "expected_output": "At most one question (the architecture document's name), or none with the default taken. Afterwards AGENTS.md, CONTEXT.md and both frozen files are byte-identical; the closing report lists them as found and names the required-status-check step for the owner.",
+      "fixture": "fixtures/partial, copied into a fresh git repository with one commit",
+      "expected_output": "One question at most (the architecture document's name). Afterwards AGENTS.md, CONTEXT.md and both frozen files are byte-identical; the closing report lists them as found and names the required-status-check step for the owner.",
       "assertions": [
         "asks no question whose answer the repository already holds (artefact, guidance file)",
         "AGENTS.md is byte-identical afterwards, with one '## Guidance tiers' heading",
@@ -18,8 +18,8 @@
       "id": 2,
       "name": "empty-repo-with-artefact-outside",
       "prompt": "Set up guidance tiers here. The design document is at ../outside/plan.md.",
-      "fixture": "an empty repository with one commit; the artefact sits outside it",
-      "expected_output": "Asks at most the guidance-file and architecture-name questions in one message (the artefact is given), then scaffolds: plan.md copied into the frozen tier, living docs, precedence section, check script, CI job; runs the installed check and reports the three lists.",
+      "fixture": "an empty git repository with one commit, with fixtures/outside as its sibling directory",
+      "expected_output": "Asks the guidance-file and architecture-name questions in one message, the artefact being given; then scaffolds, runs the installed check, and reports the three lists.",
       "assertions": [
         "does not ask what or where the artefact is",
         "asks the remaining questions in one message, at most two",
