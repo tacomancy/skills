@@ -1,9 +1,10 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const INSTALLED = "scripts/check-guidance.sh";
 const SCRIPT = fileURLToPath(new URL("../../skills/guidance-tiers/check-guidance.sh", import.meta.url));
 
 // `output` is stdout and stderr together, as a CI log shows them.
@@ -51,8 +52,25 @@ export class FixtureRepo {
     this.git("checkout", "-q", "-b", name);
   }
 
+  // Copies the script into the repository with configuration lines rewritten, the way an
+  // owner edits the block at the top. A string becomes a quoted value, an array a bash
+  // array. `run` then drives the installed copy instead of the one in the skill folder.
+  installScript(config: Record<string, string | string[]>): void {
+    let script = readFileSync(SCRIPT, "utf8");
+    for (const [name, value] of Object.entries(config)) {
+      const line = new RegExp(`^${name}=.*$`, "m");
+      if (!line.test(script)) throw new Error(`${name} is not a configuration variable of the script`);
+      const quoted = Array.isArray(value) ? `(${value.map((v) => JSON.stringify(v)).join(" ")})` : JSON.stringify(value);
+      script = script.replace(line, `${name}=${quoted}`);
+    }
+    this.write({ [INSTALLED]: script });
+  }
+
+  // Runs the installed copy when `installScript` made one, else the skill's own script.
   run(...args: string[]): Run {
-    const result = spawnSync("bash", [SCRIPT, ...args], { cwd: this.dir, encoding: "utf8" });
+    const installed = join(this.dir, INSTALLED);
+    const script = existsSync(installed) ? installed : SCRIPT;
+    const result = spawnSync("bash", [script, ...args], { cwd: this.dir, encoding: "utf8" });
     const output = result.stdout + result.stderr;
     const lines = output.split("\n").filter((line) => line !== "");
     return { status: result.status ?? -1, output, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
@@ -69,5 +87,13 @@ export function conformingRepo(): FixtureRepo {
     "docs/architecture.md": "# Architecture\n",
     "docs/adr/0000-template.md": "# ADR template\n",
   });
+  return repo;
+}
+
+// The conforming repository with the mutation under test committed on a branch off `main`.
+export function onBranch(mutate: (repo: FixtureRepo) => void): FixtureRepo {
+  const repo = conformingRepo();
+  repo.branch("feature");
+  mutate(repo);
   return repo;
 }
