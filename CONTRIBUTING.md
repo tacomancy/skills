@@ -15,7 +15,7 @@ Agent guidance lives in `CLAUDE.md`; this file holds the mechanics that apply to
 
 - the `test` job in `.github/workflows/ci.yml` passes — locally, `pnpm test` (once spec #1's skeleton has landed; until then, the guidance files are the only content);
 - the branch is up to date with `main`;
-- the pipeline's checks pass — `ticket-link`, `test-touch`, `post-merge-triggers` from `.github/workflows/`, installed by `skills/bluesky-feature-pipeline/install.sh`; what each reads is in `skills/bluesky-feature-pipeline/templates/README.md`.
+- the pipeline's checks pass — `ticket-link`, `test-touch`, `post-merge-triggers` from `.github/workflows/`, installed by `skills/bluesky-feature-pipeline/install.sh` and required per its `BRANCH_PROTECTION.md`; what each reads is in `skills/bluesky-feature-pipeline/templates/README.md`.
 
 No force pushes to `main`, no deleting it.
 
