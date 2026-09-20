@@ -26,6 +26,20 @@
         "the object and surface lists match Prompt 0, with done surfaces marked",
         "the response says to open the next session with the header, then run prompt 03"
       ]
+    },
+    {
+      "id": 3,
+      "name": "review-note-for-a-pinned-surface-applies-the-precedence-rule",
+      "prompt": "Surface 02 \u2014 Book is pinned; here is what the output rendered: <paste of fixtures/session-1-output.md>. Write its review note, and put the precedence rule in CLAUDE.md.",
+      "fixture": "the prompt set from eval 1 in a fresh repository with an empty CLAUDE.md, plus fixtures/session-1-output.md as the paste",
+      "expected_output": "A four-part review note for 02 \u2014 Book in the shape of review-checklist.md, and CLAUDE.md carrying the five-clause precedence rule verbatim.",
+      "assertions": [
+        "CLAUDE.md contains the precedence rule with all five clauses and no paraphrase",
+        "the brief-wins part lists the Book section's behaviours (page-then-date note order, one-field note entry, edit in place, delete asks once, shelf rule shared with the library, the n key) and no layout",
+        "the push-back part quotes prompt 02's row from the push-back table and says cleared or not cleared with evidence from the paste",
+        "the prototype-settles part carries layout and treatment from the paste (left rail, row height, the indented note block) and no palette or typeface",
+        "every line of the note is one citable claim"
+      ]
     }
   ]
 }
