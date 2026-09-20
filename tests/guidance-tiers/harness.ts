@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT = fileURLToPath(new URL("../../skills/guidance-tiers/check-guidance.sh", import.meta.url));
 
-export type Run = { status: number; stdout: string; lines: string[]; fails: string[] };
+// `output` is stdout and stderr together, as a CI log shows them.
+export type Run = { status: number; output: string; lines: string[]; fails: string[] };
 
 // A throwaway git repository with a `main` branch, driven the way an owner's CI would
 // drive the check: write files, commit, branch, run the script from the repo root.
@@ -32,10 +33,10 @@ export class FixtureRepo {
     }
   }
 
-  commit(message: string, files: Record<string, string> = {}): void {
+  commit(message: string, files: Record<string, string>): void {
     this.write(files);
     this.git("add", "-A");
-    this.git("commit", "-q", "--allow-empty", "-m", message);
+    this.git("commit", "-q", "-m", message);
   }
 
   // A clone whose `origin` is this repository, so `origin/main` resolves.
@@ -52,9 +53,9 @@ export class FixtureRepo {
 
   run(...args: string[]): Run {
     const result = spawnSync("bash", [SCRIPT, ...args], { cwd: this.dir, encoding: "utf8" });
-    const stdout = result.stdout + result.stderr;
-    const lines = stdout.split("\n").filter((line) => line !== "");
-    return { status: result.status ?? -1, stdout, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
+    const output = result.stdout + result.stderr;
+    const lines = output.split("\n").filter((line) => line !== "");
+    return { status: result.status ?? -1, output, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
   }
 }
 
