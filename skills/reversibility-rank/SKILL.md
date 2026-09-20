@@ -48,7 +48,7 @@ The whole reply, in this order and nothing else:
 1. A heading line.
 2. The sticky items in rank order, stickiest first, each on one line: `N. <name> — sticky because <kind>: <one line>`, where `<kind>` is one of *stored data*, *published contract or licence*, *users will touch it*, *forces a fork*.
 3. One line for the rest: `Trivial: N, N, N — <why in one clause>`.
-4. Under each sticky item, indented, a two-liner:
+4. Then, for each sticky item in the same order, an indented two-liner:
    - `to reverse:` what reversing it would cost;
    - `cheaper now:` what would make that cheaper if done before shipping — a schema version field, an adapter seam, a name chosen once.
 
