@@ -1,6 +1,6 @@
 ---
 name: hidden-verify
-description: Build hidden-render verification into a desktop application — an environment contract its shell reads at start so a run renders the window unseen, captures a PNG after a delay, quits, and keeps every piece of non-project state in a scratch directory. Use when an application is about to be verified by an agent working beside a person and lacks the hook, when a change in an application that has it needs proof for a PR, or when a project's `run` path would open a window.
+description: Run, screenshot, or verify a change in a desktop application without a window ever appearing — the project skill for launching the application, which `run` looks for first. An environment contract the shell reads at start makes a run render the window unseen, capture a PNG after a delay, quit, and keep every piece of non-project state in a scratch directory. Use when asked to run the application or confirm a change works in it, when a change needs proof for a PR, or when the application lacks the hook and is about to be verified beside a person.
 ---
 
 # Hidden verify
@@ -21,7 +21,7 @@ The rule the skill exists to enforce: **a verification run never shows a window.
 
 5. **Prove it.** Build, then launch the built binary — not the dev script — with all four variables set, the state directory and PNG path in the session's scratch space. Before launching, list the real state directory and note its modification times. Done when the PNG exists and shows the rendered page, the process has exited, no window appeared on any screen, the scratch directory holds what the run wrote, and the real state directory's listing and times are unchanged.
 
-6. **Record it.** Write into the adopting repository's agent guidance: the four names, the build command every launch depends on, the path of the built binary, the pointer that sends the `run` skill here, and the line that launch configurations are the human's preview — the last two [rules](#rules) say why each matters. Done when a reader of the guidance alone can perform step 5.
+6. **Record it.** Write into the adopting repository's agent guidance — with `guidance-tiers` installed, the guidance file it chose, since the hook is living knowledge and not frozen reference; without it, `CLAUDE.md` or `AGENTS.md`, whichever exists — the four names, the build command every launch depends on, the path of the built binary, the pointer that sends the `run` skill here, and the line that launch configurations are the human's preview — the last two [rules](#rules) say why each matters. Done when a reader of the guidance alone can perform step 5.
 
 The hook is application code: cover it in the application's tests as you would any feature, and let the ordinary path stay untouched by the mode.
 
@@ -29,7 +29,7 @@ The hook is application code: cover it in the application's tests as you would a
 
 The application has the hook, and its guidance names the four variables, the build command, and the built binary — a reader who cannot find those installs the hook first. One launch per captured state, from the first step to the last, so every PNG is reproducible from a command line.
 
-1. **Rebuild.** Build every package the launch depends on, so the binary carries the change and stale output can make neither a fix look unfixed nor a regression look fixed. Which packages is the project's to say: read it from the adopting repository's guidance file, and the first time the guidance is silent, ask the project — the person, or the workspace's dependency graph from the binary inward — and record the answer in that guidance file so the next run reads it instead of asking. Done when every named package built green after the change. (Vitrine's, as an example: the core and the shell.)
+1. **Rebuild.** Build every package the launch depends on, so the binary carries the change and stale output can make neither a fix look unfixed nor a regression look fixed. Which packages is the project's to say: read it from the adopting repository's guidance file — the one install step 6 names — and the first time the guidance is silent, ask the project — the person, or the workspace's dependency graph from the binary inward — and record the answer in that guidance file so the next run reads it instead of asking. Done when every named package built green after the change. (Vitrine's, as an example: the core and the shell.)
 
 2. **Scratch state.** Create a fresh directory for the run's state in the session's scratch space. Done when the directory exists, empty, and its path is the value the state-directory variable will take.
 

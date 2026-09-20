@@ -1,0 +1,5 @@
+# Evaluation fixtures
+
+`evals.json` names two prompts, the fixture under `fixtures/` each runs against, and what to check. They document what the run half is for: given an application that has the hook, a dev script, and a launch configuration, the procedure rebuilds first, keeps the run's state in a scratch directory, and launches the built binary — never the dev script or the launch configuration; and when the guidance does not record the hook, the launch configuration is refused rather than used. Run by hand with `skill-creator` before a merge that changes `SKILL.md`, and record the outcome in the pull request.
+
+`fixtures/lantern` is a repository description, not a buildable application: the files an agent would read to plan a run — the guidance file, the package manifest, the launch configuration, and the shell's start-up with the hook — so the evaluation is of the procedure the agent lays out, in the commands it says it would run.

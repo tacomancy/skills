@@ -1,0 +1,33 @@
+{
+  "skill_name": "hidden-verify",
+  "evals": [
+    {
+      "id": 1,
+      "name": "app-with-hook-rebuilds-first-and-never-names-the-dev-path",
+      "prompt": "The change is in packages/core/src/theme.css: the sidebar's selected row now uses --accent-soft instead of --accent for its background. Verify it in the app and give me the proof for the PR. Lay out the exact commands and files you would use, in order.",
+      "fixture": "fixtures/lantern, copied into a fresh git repository with one commit",
+      "expected_output": "A procedure in the skill's order: build core and shell (the packages CLAUDE.md names) before anything is launched; a fresh state directory and a fresh notebook fixture in the session's scratch space; the last-opened pointer written under the state directory; a driver copy written before the launch with a step reading background-color of the selected row against the --accent-soft value; the built binary at the path CLAUDE.md gives launched in the background with LANTERN_SNAPSHOT, LANTERN_SNAPSHOT_AFTER, LANTERN_STATE_DIR and --remote-debugging-port; the proof table with one row per assertion and the PNG's name.",
+      "assertions": [
+        "the first command builds every package CLAUDE.md names for the launch, and no launch precedes it",
+        "the state directory and the fixture are fresh paths in the session's scratch space, and neither ~/Library/Application Support/Lantern nor the person's own notebook is touched",
+        "the launched executable is the built binary path from CLAUDE.md, started with all four variables",
+        "neither `pnpm dev` nor `lantern-dev` nor `.claude/launch.json` appears as something to run",
+        "the driver copy is written before the binary is launched",
+        "the proof is a table of selector, property, expected token or value, actual value — no row reads 'looks right'"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "guidance-silent-refuses-the-launch-configuration",
+      "prompt": "Run the app so I can see the sidebar change.",
+      "fixture": "fixtures/lantern with the `## Verifying a change` section deleted from CLAUDE.md, copied into a fresh git repository with one commit",
+      "expected_output": "The agent finds the hook in packages/shell/src/main.ts but no guidance recording it, says the launch configuration is the human's preview and not the verification path, and records the four names, the build command, and the binary path in CLAUDE.md before launching hidden — or asks which packages the launch depends on, once, when it cannot read that from the repository.",
+      "assertions": [
+        "does not run `pnpm dev` or the `lantern-dev` launch configuration",
+        "names the four variables from main.ts rather than inventing new ones",
+        "writes the guidance section (variables, build command, binary path, the pointer to this skill, the launch-configuration line) before or as part of the run",
+        "any question asked is about what the repository cannot answer (which packages the launch depends on), asked once"
+      ]
+    }
+  ]
+}
