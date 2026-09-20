@@ -104,7 +104,13 @@ function loadMapping(path) {
 function prepass(hook, file, html) {
   const result = spawnSync(process.execPath, [hook, file], { input: html, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (result.error) fail(2, `hook ${hook}: ${result.error.message}`);
-  if (result.status !== 0) fail(2, `hook ${hook} exited ${result.status} on ${file}\n${result.stderr}`);
+  if (result.status !== 0) {
+    const how = result.signal ? `was killed by ${result.signal}` : `exited ${result.status}`;
+    fail(2, `hook ${hook} ${how} on ${file}\n${result.stderr}`);
+  }
+  // A hook that forgot to print is the one failure exit 0 cannot report; an export is
+  // never legitimately empty, so an empty stdout is the hook's mistake, not the mapping's.
+  if (result.stdout === "" && html !== "") fail(2, `hook ${hook} printed nothing for ${file}; its stdout is the HTML to map`);
   return result.stdout;
 }
 

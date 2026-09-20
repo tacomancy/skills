@@ -291,6 +291,17 @@ describe("rebrand.mjs — the pre-pass hook", () => {
     expect(fx.outputs()).toEqual([]);
   });
 
+  test("a hook that prints nothing fails the run rather than writing an empty export", () => {
+    const fx = new Fixture();
+    fx.write({ "23.html": page("a { color: #111111; }", ""), "hook.mjs": "process.stdin.resume();" });
+    fx.mapping({ "#111111": "var(--ink)" }, "mapping.json", { hook: "hook.mjs" });
+    const run = fx.rebrand("23.html");
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("hook.mjs");
+    expect(run.output).toMatch(/nothing|empty/);
+    expect(fx.outputs()).toEqual([]);
+  });
+
   test("a hook that cannot be found is a mapping error", () => {
     const fx = new Fixture();
     fx.write({ "22.html": page("", "") });
