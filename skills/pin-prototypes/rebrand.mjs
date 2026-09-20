@@ -16,9 +16,10 @@
 // a declaration value inside a <style> block or an inline style attribute. Text content,
 // other attributes, and selectors are not colours and are left alone.
 //
-// Exit codes: 0 every file written; 1 an unknown colour; 2 usage or a bad mapping file.
+// Exit codes: 0 every file written; 1 an unknown colour; 2 usage, a bad mapping file, an
+// export that cannot be read, or an --out that would overwrite an export.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, join, resolve } from "node:path";
 
 const KEY = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/;
 
@@ -101,11 +102,13 @@ const LITERAL = /#[0-9a-z_-]+|rgba?\([^)]*\)/gi;
 const VALUE = /:([^;{}]*)(?=[;}])/g;
 
 const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi;
-const STYLE_ATTR = /\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+const STYLE_ATTR = /\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
-// CSS comments blanked in place so offsets still line up with the source.
-function blankComments(css) {
-  return css.replace(/\/\*[\s\S]*?\*\//g, (c) => " ".repeat(c.length));
+// CSS comments and url(...) arguments blanked in place, so a commented-out colour or a
+// fragment reference such as url(#paint0) is not read as a colour, and offsets still
+// line up with the source.
+function blankNonColours(css) {
+  return css.replace(/\/\*[\s\S]*?\*\/|url\([^)]*\)/gi, (c) => " ".repeat(c.length));
 }
 
 function lineAt(text, offset) {
@@ -128,12 +131,13 @@ function rebrand(html, colours) {
   };
   for (const block of html.matchAll(STYLE_BLOCK)) {
     const open = /^<style\b[^>]*>/i.exec(block[0])[0].length;
-    const css = blankComments(block[1]);
+    const css = blankNonColours(block[1]);
     for (const value of css.matchAll(VALUE)) scan(value[1], block.index + open + value.index + 1);
   }
   for (const attr of html.matchAll(STYLE_ATTR)) {
-    const value = attr[1] ?? attr[2];
-    scan(value, attr.index + attr[0].length - value.length - 1);
+    const value = attr[1] ?? attr[2] ?? attr[3];
+    const closingQuote = attr[3] === undefined ? 1 : 0;
+    scan(blankNonColours(value), attr.index + attr[0].length - value.length - closingQuote);
   }
   edits.sort((a, b) => a.start - b.start);
   let out = "";
@@ -154,9 +158,18 @@ for (const file of args.files) {
   const name = basename(file);
   if (seen.has(name)) fail(2, `two exports share the basename ${name}; they would overwrite each other in ${args.out}`);
   seen.add(name);
-  const html = readFileSync(file, "utf8");
+  const path = join(args.out, name);
+  // The exports are frozen; a run that would write one back over itself is a mistake in
+  // the flags, not a rebrand.
+  if (resolve(path) === resolve(file)) fail(2, `${file} would be overwritten by its own rebrand; --out must be another directory`);
+  let html;
   try {
-    written.push({ path: join(args.out, name), html: rebrand(html, colours) });
+    html = readFileSync(file, "utf8");
+  } catch (error) {
+    fail(2, `${file}: ${error.message}`);
+  }
+  try {
+    written.push({ path, html: rebrand(html, colours) });
   } catch (error) {
     if (!("literal" in error)) throw error;
     const because = error.key === null ? "is not a colour the script can read" : `normalises to ${error.key}, which the mapping does not know`;

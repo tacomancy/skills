@@ -86,6 +86,49 @@ describe("rebrand.mjs — a total mapping", () => {
     expect(run.output).toMatch(/07\.html:3\b/);
     expect(fx.outputs()).toEqual([]);
   });
+
+  test("a url(#id) reference and a commented-out colour are not colours", () => {
+    const fx = new Fixture();
+    fx.write({ "10.html": page(".a { fill: url(#paint0); color: #123456; /* was #999999 */ }", "fill:url(#a1b2c3);color:#123456") });
+    fx.mapping({ "#123456": "var(--accent)" });
+    expect(fx.rebrand("10.html").status).toBe(0);
+    const out = fx.read("out/10.html");
+    expect(out).toContain(".a { fill: url(#paint0); color: var(--accent); /* was #999999 */ }");
+    expect(out).toContain('style="fill:url(#a1b2c3);color:var(--accent)"');
+  });
+
+  test("an unquoted style attribute is mapped like a quoted one", () => {
+    const fx = new Fixture();
+    fx.write({ "11.html": "<div style=color:#123456></div>\n<div style=color:#abcdef></div>\n" });
+    fx.mapping({ "#123456": "var(--accent)" });
+    const run = fx.rebrand("11.html");
+    expect(run.status).not.toBe(0);
+    expect(run.output).toContain("#abcdef");
+    expect(run.output).toMatch(/11\.html:2\b/);
+    fx.mapping({ "#123456": "var(--accent)", "#abcdef": "var(--sky)" });
+    expect(fx.rebrand("11.html").status).toBe(0);
+    expect(fx.read("out/11.html")).toBe("<div style=color:var(--accent)></div>\n<div style=color:var(--sky)></div>\n");
+  });
+});
+
+describe("rebrand.mjs — the flags", () => {
+  test("an --out that would overwrite an export refuses and writes nothing", () => {
+    const fx = new Fixture();
+    fx.write({ "exports/12.html": page("a { color: #123456; }", "") });
+    fx.mapping({ "#123456": "var(--accent)" });
+    const run = fx.rebrandWith(["--mapping", "mapping.json", "--out", "exports", "exports/12.html"]);
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("exports/12.html");
+    expect(fx.read("exports/12.html")).toContain("#123456");
+  });
+
+  test("an export that cannot be read is a FAIL line naming it, not a stack trace", () => {
+    const fx = new Fixture();
+    fx.mapping({});
+    const run = fx.rebrand("missing.html");
+    expect(run.status).toBe(2);
+    expect(run.lines).toEqual([expect.stringMatching(/^FAIL: missing\.html/)]);
+  });
 });
 
 describe("rebrand.mjs — the mapping file", () => {
