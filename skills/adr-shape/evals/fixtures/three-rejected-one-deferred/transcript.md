@@ -24,7 +24,7 @@ A: `gray-matter` 4.0.3. Anything that reads YAML front matter would do; it sits 
 A: `YYYY-MM-DD-<slug>.md`. Users will see these in their folder, so once we ship it we are stuck with it. Slug rules are a detail: lowercase, hyphens, cut at 60 characters.
 
 **Q: Large folders — thousands of entries — do we index?**
-A: Not yet. Deferred until dogfooding passes two thousand entries and a search takes over a second; then a search index becomes its own decision. It goes on the open list, inheriting 0003's requirement that the index be a cache — deletable without losing anything.
+A: Not yet. Deferred until dogfooding passes two thousand entries and a search takes over a second; then a search index becomes its own decision. It goes on the open list, inheriting 0003's requirement that entries stay readable without the app — so the index can only ever be a cache, deletable without losing anything.
 
 **Q: The folder-size warning?**
 A: Warn at 50 MB. Just a number in code; tune it whenever.
