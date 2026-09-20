@@ -40,22 +40,36 @@ function fail(message) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// The runtime lists its targets over HTTP before any socket exists; until the process has
-// opened the port every request is refused, which is "not yet", not a failure.
-async function findTarget() {
+// Polls `check` until it returns a value, or the timeout passes and `describe` names what
+// never came, so the two waits in a run — for the target, for readiness — fail the same way.
+async function pollUntil(check, describe) {
   const deadline = Date.now() + TIMEOUT_MS;
   do {
-    try {
-      const response = await fetch(`http://127.0.0.1:${PORT}/json/list`);
-      const targets = await response.json();
-      const page = targets.find((t) => t.type === "page" && typeof t.url === "string" && t.url.startsWith(URL_PREFIX));
-      if (page) return page;
-    } catch {
-      // Port not open yet.
-    }
+    const found = await check();
+    if (found) return found;
     await sleep(POLL_MS);
   } while (Date.now() < deadline);
-  fail(`no page target with URL prefix ${JSON.stringify(URL_PREFIX)} on port ${PORT} after ${TIMEOUT_MS} ms`);
+  fail(describe());
+}
+
+// The runtime lists its targets over HTTP before any socket exists; until the process has
+// opened the port every connection is refused, which is "not yet", not a failure. An answer
+// that is not a target list is a failure: something else is on that port.
+function findTarget() {
+  return pollUntil(
+    async () => {
+      let response;
+      try {
+        response = await fetch(`http://127.0.0.1:${PORT}/json/list`);
+      } catch {
+        return undefined;
+      }
+      const targets = await response.json().catch(() => fail(`port ${PORT} answered /json/list with something other than JSON — is it the debugging port?`));
+      if (!Array.isArray(targets)) fail(`port ${PORT} answered /json/list with something other than a target list — is it the debugging port?`);
+      return targets.find((t) => t.type === "page" && typeof t.url === "string" && t.url.startsWith(URL_PREFIX));
+    },
+    () => `no page target with URL prefix ${JSON.stringify(URL_PREFIX)} on port ${PORT} after ${TIMEOUT_MS} ms`,
+  );
 }
 
 // One CDP session: sends commands by id and resolves each with its result. A socket that
@@ -82,6 +96,9 @@ function connect(url) {
     function send(method, params) {
       const id = nextId++;
       return new Promise((resolveCommand, rejectCommand) => {
+        // A send on a closed socket is dropped silently by the WebSocket API; reject here so
+        // a page that went away between steps is a named failure, not a hang.
+        if (socket.readyState !== WebSocket.OPEN) return rejectCommand(new Error("the debugging connection closed"));
         pending.set(id, { resolve: resolveCommand, reject: rejectCommand });
         socket.send(JSON.stringify({ id, method, params }));
       });
@@ -99,13 +116,11 @@ async function evaluate(session, expression) {
   return result.value;
 }
 
-async function waitForReady(session) {
-  const deadline = Date.now() + TIMEOUT_MS;
-  do {
-    if (await evaluate(session, `document.querySelector(${JSON.stringify(READY)}) !== null`)) return;
-    await sleep(POLL_MS);
-  } while (Date.now() < deadline);
-  fail(`readiness selector ${JSON.stringify(READY)} never matched within ${TIMEOUT_MS} ms`);
+function waitForReady(session) {
+  return pollUntil(
+    () => evaluate(session, `document.querySelector(${JSON.stringify(READY)}) !== null`),
+    () => `readiness selector ${JSON.stringify(READY)} never matched within ${TIMEOUT_MS} ms`,
+  );
 }
 
 async function runStep(session, step) {
@@ -131,12 +146,15 @@ async function runStep(session, step) {
 
 const target = await findTarget();
 const session = await connect(target.webSocketDebuggerUrl).catch((error) => fail(error.message));
-await waitForReady(session);
+try {
+  await waitForReady(session);
+} catch (error) {
+  fail(`waiting for readiness selector ${JSON.stringify(READY)} failed: ${error.message}`);
+}
 for (const [index, step] of STEPS.entries()) {
   try {
     await runStep(session, step);
   } catch (error) {
-    session.close();
     fail(`step ${index + 1} failed: ${error.message}`);
   }
 }

@@ -27,6 +27,6 @@ The hook is application code: cover it in the application's tests as you would a
 
 ## Run a verification
 
-Drive the hidden run with [`driver.mjs`](driver.mjs): a single Node script with no dependencies that finds the page on the debugging port by URL prefix, waits for a readiness selector, then runs the steps written at the top of the file — read a computed style, evaluate an expression — and prints each result, so the edited copy plus its output is the record of the run. Copy it into the session's scratch space and edit the block at its top there; the copy in this folder is the template. It is not committed to the adopting repository unless the project decides to keep one, and then it lives where the project's other verification tooling does.
+Drive the hidden run with [`driver.mjs`](driver.mjs), the template whose header states its contract: copy it into the session's scratch space, write the run — port, URL prefix, readiness selector, steps — in the block at the top of the copy, and run it with Node; the copy plus what it printed is the record of the run. Keep the copy in scratch. Commit one only when the project decides to keep a driver, and then beside its other verification tooling.
 
 Origin: Vitrine's shell snapshot mode (`VITRINE_SNAPSHOT`, `VITRINE_SNAPSHOT_AFTER`, `VITRINE_APP_SUPPORT_DIR`) and `docs/agents/run.md`.

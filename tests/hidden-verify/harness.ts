@@ -60,7 +60,6 @@ export class Driver {
 export class Browser {
   private constructor(
     readonly port: number,
-    readonly url: string,
     private readonly process: ChildProcess,
   ) {}
 
@@ -73,7 +72,12 @@ export class Browser {
       ["--headless=new", "--no-sandbox", "--no-first-run", `--user-data-dir=${userDataDir}`, `--remote-debugging-port=${port}`, url],
       { stdio: "ignore" },
     );
-    return new Browser(port, url, child);
+    // A Chromium that is missing or not executable fails the test by name rather than as an
+    // unhandled event; `playwright install chromium` is the fix.
+    child.on("error", (error) => {
+      throw new Error(`could not launch Chromium at ${chromium.executablePath()}: ${error.message}`);
+    });
+    return new Browser(port, child);
   }
 
   close(): void {
