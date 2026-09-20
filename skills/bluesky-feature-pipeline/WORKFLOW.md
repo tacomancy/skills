@@ -92,7 +92,7 @@ Each stage ends where the next one can check it started right: a brief with its 
 - [ ] Create the branch and worktree; open the session there with the ticket's number and nothing else.
 - [ ] Implement — `implement`, as an example — driving `tdd` for every seam.
 - [ ] Run `code-review` before the PR opens, and again if the branch moves after; without it, read the diff as a reviewer would and write what you find into the review section.
-- [ ] Open the PR with a closing keyword naming the ticket and the review in the body: its findings, and each item declined with why. Where the guidance file's post-merge section obliges an issue for this diff, link it in the body on a line naming the trigger.
+- [ ] Open the PR with a closing keyword naming the ticket and the review in the body: its findings, and each item declined with why. Where a post-merge trigger fires on this diff, answer it in the body on a line naming the trigger: the issue it obliges, or `none` when the path fired but not the condition.
 - [ ] When CI stays red after the obvious fix, diagnose — `diagnosing-bugs`, as an example: reproduce, minimise, hypothesise — rather than retry until green.
 - [ ] Ends with: a reviewed, green PR, open. The session stops there.
 

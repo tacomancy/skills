@@ -41,6 +41,32 @@ describe("post-merge-trigger check", () => {
     }
   });
 
+  test("a body line naming the trigger with `none` passes: the path fired, the condition did not", async () => {
+    github.pullFiles(40, ["skills/foo/SKILL.md"]);
+    for (const line of ["the public site: none", "- The public site — none", "the public site: None."]) {
+      const run = await github.run(SCRIPT, payload({ number: 40, body: `Closes #12\n\n${line}\n` }), ENV);
+      expect(run.status, line).toBe(0);
+      expect(run.stdout, line).toContain("the public site");
+      expect(run.stdout, line).toContain("none");
+    }
+  });
+
+  test("`none` followed by anything else, or inside a longer word, is not the none form", async () => {
+    github.pullFiles(40, ["skills/foo/SKILL.md"]);
+    for (const line of ["the public site: none yet", "the public site: nonesuch", "the public site: none of the above needs an issue"]) {
+      const run = await github.run(SCRIPT, payload({ number: 40, body: `Closes #12\n\n${line}\n` }), ENV);
+      expect(run.status, line).toBe(1);
+    }
+  });
+
+  test("a fired trigger with neither a linked issue nor a none line fails naming both forms", async () => {
+    github.pullFiles(40, ["skills/foo/SKILL.md"]);
+    const run = await github.run(SCRIPT, payload({ number: 40, body: "Closes #12" }), ENV);
+    expect(run.status).toBe(1);
+    expect(run.stderr).toContain("'the public site: <owner/repo>#<issue>'");
+    expect(run.stderr).toContain("'the public site: none'");
+  });
+
   test("an issue reference on a line that does not name the trigger does not count", async () => {
     github.pullFiles(40, ["skills/foo/SKILL.md"]);
     const run = await github.run(SCRIPT, payload({ number: 40, body: "Closes #12\n\nSee also tacomancy/tacomancy#31\n" }), ENV);

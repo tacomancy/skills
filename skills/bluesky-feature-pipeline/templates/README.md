@@ -33,7 +33,7 @@ Each workflow reads its parameters from the `env` of its one `run` step; the YAM
 | `{{FAMILY_PREFIX}}` | `ticket-link-check.yml` | the family prefix, as above; the YAML supplies the `/` |
 | `{{SOURCE_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming the repository's source files — `src/**, lib/**/*.ts` as an example |
 | `{{TEST_GLOBS}}` | `test-touch-check.yml` | comma-separated globs naming its test files — `tests/**, **/*.test.ts` as an example |
-| `{{POST_MERGE_TRIGGERS}}` | `post-merge-trigger-check.yml` | the guidance file's post-merge section as `<name>: <glob>, <glob>; <name>: <glob>` — one trigger per `;`, named for what it obliges, with the paths that fire it; empty when the section names none. `the public site: skills/*/SKILL.md; the invariants: CLAUDE.md` as an example of the shape; a glob goes in only when it *is* the condition, and [`ADOPTING.md`](../ADOPTING.md) § Parameters says why this repository installs none |
+| `{{POST_MERGE_TRIGGERS}}` | `post-merge-trigger-check.yml` | the guidance file's post-merge section as `<name>: <glob>, <glob>; <name>: <glob>` — one trigger per `;`, named for what it obliges, with the paths that fire it; empty when the section names none. `the public site: skills/*/SKILL.md; the invariants: CLAUDE.md` as an example of the shape; a glob goes in when it *is* the condition, or when it is wider by a margin a filer can state with the `none` line, and [`ADOPTING.md`](../ADOPTING.md) § Parameters says how this repository chose its one |
 | `{{UNCLAIMED_LABEL}}` | `ticket-lifecycle-labels.yml` | the triage set's ready label, the unclaimed state a ticket carries until a session claims it — `ready-for-agent` as an example, the one the ticket template applies; empty when the set has none, and the mover then lifts nothing at open |
 
 Globs, in both scripts: `**` spans directories, `*` and `?` stay within one path segment, and a glob with no `/` matches a file name at any depth. Names and globs carry no `,`, `;`, or `:` beyond the separators, and no `"`, since the value sits in a double-quoted YAML string.
@@ -42,7 +42,7 @@ What each check reads from the PR, so a filer knows what passes it:
 
 - **Ticket link**: a closing keyword — `Closes #N`, `Fixes #N`, `Resolves #N` and their forms — naming an issue that carries a `<prefix>/<beat>` label. Every issue so named is checked.
 - **Test touch**: a source file changed without a test file changed fails unless the PR carries the label `no-tests-needed` or a body line `No tests needed: <why>` with the reason filled in.
-- **Post-merge triggers**: a trigger whose globs match a changed file is linked by a body line that leads with the trigger's name (a list marker before it is fine) and references an issue after it — `the public site: owner/repo#N`, or an issue URL. Each fired trigger needs its own line.
+- **Post-merge triggers**: a trigger whose globs match a changed file is answered by a body line that leads with the trigger's name (a list marker before it is fine) and, after it, either references the issue it obliged — `the public site: owner/repo#N`, or an issue URL — or says `none`, meaning the change fired the path but not the condition the trigger stands for. Each fired trigger needs its own line.
 
 ## The lifecycle mover
 

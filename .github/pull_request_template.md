@@ -20,4 +20,4 @@ The landing gate reads this section for the review's presence.
 - [ ] Built with `implement` driving `tdd`: every seam went red before green, or the body says why a test change is absent
 - [ ] `code-review` ran on the current head and its result is above
 - [ ] This PR touches this ticket only: no other ticket's branch, no file outside its scope
-- [ ] Where the guidance file's post-merge section obliges an issue for this change, it is linked here on a line naming the trigger — `<trigger>: owner/repo#N` — which the post-merge-trigger check reads
+- [ ] Where a post-merge trigger fires on this change, a line naming it says which: the issue it obliges — `<trigger>: owner/repo#N` — or `<trigger>: none` when the change fired the path but not the condition; the post-merge-trigger check reads that line
