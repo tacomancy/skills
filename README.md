@@ -11,6 +11,7 @@ Each skill is a folder under `skills/` holding a `SKILL.md`; the skills are the 
 ## Skills
 
 - `guidance-tiers` — frozen and living documentation tiers with a precedence rule and a CI-enforced check.
+- `hidden-verify` — build hidden-render verification into a desktop application: render unseen, capture a PNG, quit, with all state in a scratch directory.
 
 ## Developing
 
