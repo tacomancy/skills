@@ -120,6 +120,8 @@ describe("rebrand.mjs — the flags", () => {
     expect(run.status).toBe(2);
     expect(run.output).toContain("exports/12.html");
     expect(fx.read("exports/12.html")).toContain("#123456");
+    // The same directory reached by another spelling of its path is still the same directory.
+    expect(fx.rebrandWith(["--mapping", "mapping.json", "--out", "./exports/../exports/", "exports/12.html"]).status).toBe(2);
   });
 
   test("an export that cannot be read is a FAIL line naming it, not a stack trace", () => {

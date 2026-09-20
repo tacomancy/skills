@@ -18,8 +18,8 @@
 //
 // Exit codes: 0 every file written; 1 an unknown colour; 2 usage, a bad mapping file, an
 // export that cannot be read, or an --out that would overwrite an export.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 
 const KEY = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/;
 
@@ -149,6 +149,12 @@ function rebrand(html, colours) {
   return out + html.slice(cursor);
 }
 
+// The native realpath is the one that reports the on-disk casing, which the portable
+// implementation does not.
+function sameDirectory(a, b) {
+  return existsSync(a) && existsSync(b) && realpathSync.native(a) === realpathSync.native(b);
+}
+
 const args = parseArgs(process.argv.slice(2));
 const colours = loadMapping(args.mapping);
 
@@ -160,8 +166,9 @@ for (const file of args.files) {
   seen.add(name);
   const path = join(args.out, name);
   // The exports are frozen; a run that would write one back over itself is a mistake in
-  // the flags, not a rebrand.
-  if (resolve(path) === resolve(file)) fail(2, `${file} would be overwritten by its own rebrand; --out must be another directory`);
+  // the flags, not a rebrand. Real paths, so a case-insensitive filesystem cannot let
+  // `--out Exports` through for `exports/`.
+  if (sameDirectory(args.out, dirname(file))) fail(2, `${file} would be overwritten by its own rebrand; --out must be another directory`);
   let html;
   try {
     html = readFileSync(file, "utf8");
