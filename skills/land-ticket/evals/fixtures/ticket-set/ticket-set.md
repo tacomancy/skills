@@ -42,6 +42,14 @@ What the tracker returns for the Close step, after PR #12 merges:
 3. Issues labelled `skill/shelf-sort`, all states, excluding #7: #8 closed, #9 closed, #11 open.
 4. #7 is left open; one child (#11) remains.
 
+## Frontier answers
+
+What the tracker returns for the Frontier step, after #9 closes:
+
+1. Open issues labelled `skill/shelf-sort`, excluding #7: #11.
+2. Blocked-by edges of #11, through the tracker's native dependencies: #9, closed.
+3. No other edges. #11 has no open blocker; #9 is among its blockers.
+
 ## Variant — last child
 
 The same set later: #8 and #9 closed (PRs #10 and #12), #11 has PR #14 open on branch `feat/ticket-11-sort-toggle`, base `main`, body "Implements #11", reviewed, merge state `CLEAN`, its head's run completed green. After PR #14 merges, the tracker returns:
@@ -51,3 +59,5 @@ The same set later: #8 and #9 closed (PRs #10 and #12), #11 has PR #14 open on b
 3. Issues labelled `skill/shelf-sort`, all states, excluding #7: #8 closed, #9 closed, #11 closed.
 4. Closing comments: #8 "Landed in #10."; #9 "Landed in #12."
 5. Close #7 with a comment listing the PRs: succeeds; #7 reads closed.
+
+For the Frontier step in this variant, the open issues labelled `skill/shelf-sort`, excluding #7, are none: the frontier is empty and nothing was unblocked.

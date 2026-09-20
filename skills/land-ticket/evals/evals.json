@@ -92,6 +92,19 @@
         "a comment naming PR #12 is added to #29 because its body names only #10",
         "the report marks the trigger fired-and-already-covered with #29 linked, and the other two did-not-fire"
       ]
+    },
+    {
+      "id": 8,
+      "name": "frontier-names-the-ticket-this-merge-unblocked-in-the-five-line-shape",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set through the merge and close, then fixtures/guidance-without-triggers, with the tracker answering as ticket-set's § Frontier answers says: #11 is the family's one open ticket, and its only blocked-by edge is #9, closed",
+      "expected_output": "The family's open tickets are listed and #11's blocking edges read through the tracker's native dependencies; #11 has no open blocker, so it is the frontier, and since #9 — the ticket just closed — is among its blockers, #11 is named as what this merge unblocked. The report is five lines in order: the merge commit, #9 closed with #7 open and one child remaining, no post-merge section, the frontier #11 with #11 newly unblocked, and that the branch was updated first.",
+      "assertions": [
+        "the frontier is computed from the blocked-by edges of the family's open tickets, read through native dependencies, and names #11",
+        "#11 is named separately as unblocked by this merge because #9 was its last open blocker",
+        "the report is five lines in the order merge, close, triggers, frontier, handed back",
+        "the frontier line carries both the frontier and what was unblocked, and the last line says the branch was updated first"
+      ]
     }
   ]
 }

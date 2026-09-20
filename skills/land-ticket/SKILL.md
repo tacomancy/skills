@@ -89,14 +89,22 @@ As an example of such a section: this repository's `CLAUDE.md § The public site
 
 ## 5. Frontier
 
-List the open tickets whose blockers are all closed — the ones a session can start now:
+The **frontier** is the set of open tickets a session can start now: every open ticket in the closed ticket's label family — the parent excluded, since it carries the family's label too — whose blockers all read closed. List the family's open tickets, read each one's blocking edges through the tracker's native dependencies, and keep the tickets with no open blocker. Of those, the ones whose edges name the ticket just closed are what this merge **unblocked** — their last open blocker was this one — and the report names them apart from the rest of the frontier.
 
 ```bash
-gh api repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by --jq '.[].state'
+# gh, as an example of list-the-family's-open-tickets and read-blocked-by-edges
+gh issue list --label "skill/<name>" --state open --limit 500 --json number --jq '.[] | select(.number != <P>) | .number'
+gh api repos/<owner>/<repo>/issues/<M>/dependencies/blocked_by --jq '.[] | "\(.number) \(.state)"'
 ```
 
-for each open ticket under the same `skill/<name>` label. Done when the report names the frontier and, for the closed ticket, the tickets it unblocked.
+Without `to-tickets` there is no family and no edges, and the frontier line reads "no ticket set". Done when the report names both the frontier and the tickets unblocked; an empty one is stated as empty.
 
 ## Report
 
-Five lines: the merge commit, the ticket closed and the parent's state, the triggers — each fired one with what was done or the issue that already covered it, and "none fired" or "no post-merge section" otherwise — the frontier, and anything handed back from the gate — or that the branch was updated first.
+Five lines, in this order, one per step so every step's output has a line to land in:
+
+1. **Merge** — the merge commit on the base, in the style read; or that nothing merged.
+2. **Close** — the ticket closed, and the parent's state: closed with its PR list, open with the count of children remaining, or no parent.
+3. **Triggers** — each trigger's state: fired and done with what was done, fired and already covered with the issue linked, did not fire; or "none fired" or "no post-merge section".
+4. **Frontier** — the tickets a session can start now, and which of them this merge unblocked; or "no ticket set".
+5. **Handed back** — what the gate handed back and on which head, or that the branch was updated first, or that neither happened.
