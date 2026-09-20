@@ -155,14 +155,27 @@ else
 fi
 
 # The check script, copied from beside this one with its configuration block filled in.
-# The repository owns the copy from here on: its rules are its own.
-[ -e "$script" ] && script_found=1 || script_found=0
+# The repository owns the copy from here on: its rules are its own, so an existing copy is
+# never replaced, only measured against the template so the report can say how far it
+# has drifted — line counts, and which configuration values differ.
+template="$(mktemp)"
+trap 'rm -f "$template"' EXIT
 sed \
   -e "s|^FROZEN_DIR=\"[^\"]*\"|FROZEN_DIR=\"$frozen_dir\"|" \
   -e "s|^LIVING_DOCS=([^)]*)|LIVING_DOCS=(\"$context\" \"$architecture\")|" \
   -e "s|^ADR_DIR=\"[^\"]*\"|ADR_DIR=\"$adr_dir\"|" \
-  "$skill_dir/check-guidance.sh" | place "$script"
-[ "$script_found" = 1 ] || chmod +x "$script"
+  "$skill_dir/check-guidance.sh" >"$template"
+if [ ! -e "$script" ]; then
+  place "$script" <"$template"
+  chmod +x "$script"
+elif cmp -s "$template" "$script"; then
+  say "found: $script (matches the template)"
+else
+  numstat="$(git diff --no-index --numstat "$template" "$script" || true)"
+  numstat="${numstat%	*}"; added="${numstat%%	*}"; removed="${numstat##*	}"
+  config="$(comm -13 <(grep -E '^[A-Z_]+=' "$template" | sort) <(grep -E '^[A-Z_]+=' "$script" | sort) | cut -d= -f1 | tr '\n' ' ')"
+  say "found: $script (differs from the template: $added lines added, $removed removed${config:+; configuration differs in ${config% }})"
+fi
 
 # GitHub Actions is the one CI whose job file has a known home; any other CI gets the
 # command and the owner wires it in.

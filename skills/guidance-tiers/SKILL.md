@@ -31,6 +31,6 @@ Run the installed check against the base branch, for example `bash scripts/check
 
 ## 5. Report
 
-Close with three short lists: what was created; what was found and left alone; what the owner still has to do. The last always includes making the CI job a required status check, a repository setting no agent can change. For a CI other than GitHub Actions, the scaffold printed the one command to wire in; repeat it here. Done when every line the scaffold printed is in one of the first two lists.
+Close with three short lists: what was created; what was found and left alone; what the owner still has to do. A found check script that differs from the template goes in the second list with the scaffold's summary of the difference — the repository's copy is its own, and whether to take the template's rules is the owner's call, so it also goes in the third. The third always includes making the CI job a required status check, a repository setting no agent can change. For a CI other than GitHub Actions, the scaffold printed the one command to wire in; repeat it here. Done when every line the scaffold printed is in one of the first two lists.
 
 Origin: Vitrine's `CLAUDE.md` § Reference material and § Rules, `docs/reference/README.md`, and `Scripts/check-guidance.sh`.
