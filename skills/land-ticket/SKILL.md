@@ -99,4 +99,4 @@ for each open ticket under the same `skill/<name>` label. Done when the report n
 
 ## Report
 
-Five lines: the merge commit, the ticket closed and the parent's state, the triggers — each fired one with its issue (opened or linked) and "none fired" or "no post-merge section" otherwise — the frontier, and anything handed back from the gate — or that the branch was updated first.
+Five lines: the merge commit, the ticket closed and the parent's state, the triggers — each fired one with what was done or the issue that already covered it, and "none fired" or "no post-merge section" otherwise — the frontier, and anything handed back from the gate — or that the branch was updated first.
