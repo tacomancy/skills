@@ -1,0 +1,35 @@
+name: Ticket lifecycle labels
+
+# Moves a ticket's lifecycle label as its PR moves, so no session has to remember:
+# PR opened -> ticket:in-review on the ticket the closing keyword names;
+# PR merged -> ticket:landed on it, and a comment on the beat its `## Parent` names.
+#
+# Labels and comments only. Closing the ticket, and closing the beat on its last
+# ticket, belong to the landing session; this workflow never changes issue state.
+# The labels come from the pipeline's install script; nothing here creates one.
+#
+# The logic is scripts/ticket-lifecycle.mjs beside this file; this
+# file only picks the events and runs it.
+#
+# `pull_request` gives a fork's PR a read-only token, so the label write fails
+# there. Tickets run on branches of this repository; a repository that takes
+# fork PRs weighs `pull_request_target` (a write token; checkout stays on the
+# base ref, so the base's script runs) against the wider grant.
+
+on:
+  pull_request:
+    types: [opened, closed]
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  move-label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node .github/workflows/scripts/ticket-lifecycle.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
