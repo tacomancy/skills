@@ -173,6 +173,27 @@ describe("scaffold.sh in a partially populated repository", () => {
     expect(repo.read("scripts/check-guidance.sh")).toBe(edited);
     expect(again.output).toMatch(/^found: scripts\/check-guidance.sh.*differs from the template/m);
     expect(again.output).toMatch(/ADR_DIR/);
-    expect(again.output).toMatch(/4 lines added, 1 removed/);
+    expect(again.output).toMatch(/\+4 -1 lines/);
+  });
+
+  test("a pre-existing check script with its configuration block removed names every missing value", () => {
+    const repo = new FixtureRepo();
+    repo.scaffold("--guidance", "CLAUDE.md");
+    const stripped = repo.read("scripts/check-guidance.sh").split("\n").filter((l) => !/^[A-Z_]+=/.test(l)).join("\n");
+    repo.write({ "scripts/check-guidance.sh": stripped });
+    const again = repo.scaffold("--guidance", "CLAUDE.md");
+    expect(again.status).toBe(0);
+    expect(again.output).toMatch(/configuration differs in .*ADR_DIR/);
+    expect(again.output).toMatch(/FROZEN_DIR/);
+    expect(again.output).toMatch(/LIVING_DOCS/);
+  });
+
+  test("a precedence heading with trailing whitespace still counts as present", () => {
+    const repo = new FixtureRepo();
+    repo.write({ "CLAUDE.md": "# Claude\n\n## Guidance tiers  \n\nThe owner's own.\n" });
+    const run = repo.scaffold();
+    expect(run.status).toBe(0);
+    expect(repo.read("CLAUDE.md").match(/## Guidance tiers/g)).toHaveLength(1);
+    expect(run.output).toContain("found: CLAUDE.md");
   });
 });

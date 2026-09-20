@@ -148,7 +148,7 @@ section() {
 # what "absent" means here.
 if [ ! -e "$guidance" ]; then
   { say "# ${guidance%.md}"; say; section; } | place "$guidance"
-elif grep -q '^## Guidance tiers$' "$guidance"; then
+elif grep -q '^## Guidance tiers[[:space:]]*$' "$guidance"; then
   say "found: $guidance"
 else
   { say; section; } >>"$guidance"; say "appended: $guidance § Guidance tiers"
@@ -157,7 +157,8 @@ fi
 # The check script, copied from beside this one with its configuration block filled in.
 # The repository owns the copy from here on: its rules are its own, so an existing copy is
 # never replaced, only measured against the template so the report can say how far it
-# has drifted — line counts, and which configuration values differ.
+# has drifted.
+config_lines() { grep -E '^[A-Z_]+=' "$1" | sort; }
 template="$(mktemp)"
 trap 'rm -f "$template"' EXIT
 sed \
@@ -168,13 +169,17 @@ sed \
 if [ ! -e "$script" ]; then
   place "$script" <"$template"
   chmod +x "$script"
-elif cmp -s "$template" "$script"; then
-  say "found: $script (matches the template)"
 else
-  numstat="$(git diff --no-index --numstat "$template" "$script" || true)"
-  numstat="${numstat%	*}"; added="${numstat%%	*}"; removed="${numstat##*	}"
-  config="$(comm -13 <(grep -E '^[A-Z_]+=' "$template" | sort) <(grep -E '^[A-Z_]+=' "$script" | sort) | cut -d= -f1 | tr '\n' ' ')"
-  say "found: $script (differs from the template: $added lines added, $removed removed${config:+; configuration differs in ${config% }})"
+  # `git diff --no-index` exits 1 whenever the files differ, in content or in mode; any other
+  # exit is a real failure. Only content counts as drift.
+  numstat="$(git diff --no-index --numstat "$template" "$script" || [ $? -eq 1 ])"
+  read -r added removed _ <<<"${numstat:-0 0}"
+  if [ "$added" = 0 ] && [ "$removed" = 0 ]; then
+    say "found: $script (matches the template)"
+  else
+    config="$(comm -3 <(config_lines "$template") <(config_lines "$script") | tr -d '\t' | cut -d= -f1 | sort -u | tr '\n' ' ')"
+    say "found: $script (differs from the template: +$added -$removed lines${config:+; configuration differs in ${config% }})"
+  fi
 fi
 
 # GitHub Actions is the one CI whose job file has a known home; any other CI gets the
