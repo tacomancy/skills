@@ -125,7 +125,7 @@ Status labels layer on the adopter's own set, and each has one writer, so no sta
 - `ticket:blocked` — a side state on the ticket; set by the ticket session when it flags, lifted by the spec session when it decides.
 - Issue **state** — closing a ticket, closing a beat on its last child — belongs to stage 8 alone; the workflows never close an issue.
 
-A ticket carries no status label until a session claims it; the unclaimed state is the tracker's ready label — `ready-for-agent`, as an example — as `to-tickets` leaves it.
+A ticket carries no status label until a session claims it; the unclaimed state is the tracker's ready label — `ready-for-agent`, as an example — as `to-tickets` leaves it, and the lifecycle workflow lifts it when the ticket's PR opens.
 
 ## Feedback loops
 

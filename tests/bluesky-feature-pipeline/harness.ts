@@ -15,6 +15,7 @@ export const PLACEHOLDERS: Record<string, RegExp> = {
   "{{SOURCE_GLOBS}}": /^workflows\//,
   "{{TEST_GLOBS}}": /^workflows\//,
   "{{POST_MERGE_TRIGGERS}}": /^workflows\//,
+  "{{UNCLAIMED_LABEL}}": /^workflows\//,
 };
 
 export function tokensIn(text: string): string[] {
@@ -157,6 +158,8 @@ export function runScript(script: string, env: Record<string, string>): Promise<
 
 const LIFECYCLE = join(TEMPLATES, "workflows/scripts/ticket-lifecycle.mjs");
 const REPO = "acme/widgets";
+// The tracker's ready label: the unclaimed state the mover lifts at PR open.
+export const UNCLAIMED = "ready-for-agent";
 
 export type TrackerIssue = { body?: string; labels?: string[]; state?: "open" | "closed" };
 export type TrackerCall = { method: string; path: string; body: unknown };
@@ -217,14 +220,15 @@ export class Tracker {
     this.server.close();
   }
 
-  // Runs the script against this tracker with the payload written where Actions puts it.
+  // Runs the script against this tracker with the payload written where Actions puts it
+  // and the unclaimed label the install script would have written for this repository.
   // Asynchronous because the stub answers from this same event loop.
   run(event: unknown, env: Record<string, string | undefined> = {}): Promise<MoverRun> {
     const dir = mkdtempSync(join(tmpdir(), "ticket-lifecycle-"));
     const eventPath = join(dir, "event.json");
     writeFileSync(eventPath, JSON.stringify(event));
     const child = spawn(process.execPath, [LIFECYCLE], {
-      env: { PATH: process.env.PATH, GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: REPO, GITHUB_API_URL: this.url, GITHUB_TOKEN: "stub-token", ...env },
+      env: { PATH: process.env.PATH, GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: REPO, GITHUB_API_URL: this.url, GITHUB_TOKEN: "stub-token", UNCLAIMED_LABEL: UNCLAIMED, ...env },
     });
     let output = "";
     child.stdout.on("data", (chunk) => (output += chunk));
@@ -278,6 +282,7 @@ export const INSTALL_ARGS = [
   "--test-globs", "tests/**, **/*.test.ts",
   "--trigger", "the public site: skills/*/SKILL.md",
   "--trigger", "the invariants: CLAUDE.md",
+  "--unclaimed-label", "ready-for-agent",
 ];
 
 const GH_STUB = `#!/usr/bin/env bash

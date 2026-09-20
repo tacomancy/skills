@@ -1,12 +1,15 @@
 name: Ticket lifecycle labels
 
 # Moves a ticket's lifecycle label as its PR moves, so no session has to remember:
-# PR opened -> ticket:in-review on the ticket the closing keyword names;
+# PR opened -> ticket:in-review on the ticket the closing keyword names, and the
+#              unclaimed label named in `env` comes off it;
 # PR merged -> ticket:landed on it, and a comment on the beat its `## Parent` names.
 #
 # Labels and comments only. Closing the ticket, and closing the beat on its last
 # ticket, belong to the landing session; this workflow never changes issue state.
-# The labels come from the pipeline's install script; nothing here creates one.
+# The status labels come from the pipeline's install script; nothing here creates
+# one. The unclaimed label is the adopter's own ready label, written into `env` by
+# the install script, empty when the triage set has none.
 #
 # The logic is scripts/ticket-lifecycle.mjs beside this file; this
 # file only picks the events and runs it.
@@ -33,3 +36,4 @@ jobs:
       - run: node .github/workflows/scripts/ticket-lifecycle.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          UNCLAIMED_LABEL: "ready-for-agent"

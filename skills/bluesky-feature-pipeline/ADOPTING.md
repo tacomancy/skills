@@ -19,7 +19,7 @@ Done when every installed file is at its path, the six status labels exist, ever
 **Example — `tacomancy/skills`.** The run was
 
 ```bash
-skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**'
+skills/bluesky-feature-pipeline/install.sh --prefix skill --source-globs 'skills/**/*.sh, skills/**/*.mjs' --test-globs 'tests/**' --unclaimed-label ready-for-agent
 ```
 
 and it refused nothing: `.github/` held one workflow, `ci.yml`, whose name none of the pipeline's files share, and no templates. It created the eleven files and the six labels; a second run reported every one as `found`. The merge sections below were exercised by the collisions the skill's tests raise, not by this run.
@@ -56,7 +56,7 @@ The script creates only a label the tracker lacks, so an existing label stands; 
 
 - **The family.** The prefix is the family the repository already carries per feature or area, and the shape is `<prefix>/<beat>`: the ticket-link check reads `FAMILY_LABEL_PREFIX: "<prefix>/"` as a plain prefix, and the templates' hints supply the `/`. A family under another separator — `area:payments` — is renamed to the slash form, which carries its issues along, or the installed `ticket-link-check.yml` gets `FAMILY_LABEL_PREFIX: "area:"` as one merge of that file.
 - **The spec label.** The stub template applies `spec`; nothing else reads it. A repository whose beats carry another name — `epic`, `feature` — puts that name on the stub's `labels:` line instead, or renames its label to `spec`.
-- **The ready label.** The ticket template applies `ready-for-agent`, the unclaimed state `to-tickets` leaves; a triage set that names it differently names it on that template's `labels:` line, as the template says.
+- **The ready label.** The ticket template applies `ready-for-agent`, the unclaimed state `to-tickets` leaves; a triage set that names it differently names it on that template's `labels:` line, as the template says, and passes the same name as `--unclaimed-label` — § Parameters.
 - **The status labels.** `spec:needs-grilling`, `spec:ready-for-tickets`, `spec:tickets-generated`, `ticket:in-review`, `ticket:landed`, `ticket:blocked` are fixed: the lifecycle script writes two of them by name and the sessions the others. An existing label with the same meaning and the same single writer — an `in-review` the workflow alone moved — is renamed to the pipeline's name; one with a wider meaning — a `blocked` any person sets for any reason — stays for that purpose, and the pipeline's label exists beside it with its narrower one. Two labels for one meaning is what the mapping avoids.
 
 **Example — `tacomancy/skills`.** The family was already `skill/<name>`, so the prefix is `skill`; `spec` already marked every spec, and the triage set already carried `ready-for-agent`; no status-like label existed. The mapping was a matter of naming the prefix, and the script created the six status labels beside the family, `spec`, and the triage set.
@@ -85,8 +85,9 @@ The script's values on a repository with history are read from what the reposito
 
 - **Source and test globs** name the files the repository's test loop covers. A repository whose prose is reviewed by hand and whose scripts are tested names the scripts, so a prose-only PR passes the test-touch check without a waiver and a script change without a test change does not.
 - **Post-merge triggers** are path globs, and the check has no waiver: a fired trigger passes only with a linked issue. A trigger goes in when the glob *is* its condition — every change under those paths obliges the issue. A condition finer than a path set — a landing, a line inside a file, one section of the guidance file — stays with stage 8, where `land-ticket` reads the post-merge section against the diff, and the parameter is left empty for it; a glob wider than the condition would block the changes that oblige nothing, with no way through.
+- **The unclaimed label** is the triage set's ready label, the one the ticket template applies and a ticket carries until a session claims it. The lifecycle mover lifts it when a PR opens for the ticket, so a ticket in review never reads as grabbable. A triage set with no such label leaves the parameter out, and the mover lifts nothing at open.
 
-**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. No trigger: the guidance file's three site triggers are a landing, a description line inside `SKILL.md`, and the invariants section inside the guidance file, none of them a path set, so they stay with `land-ticket` as they were before adoption.
+**Example — `tacomancy/skills`.** Source globs `skills/**/*.sh, skills/**/*.mjs` and test globs `tests/**`: scripts are the test seam, `SKILL.md` prose is evaluated by hand before merge. No trigger: the guidance file's three site triggers are a landing, a description line inside `SKILL.md`, and the invariants section inside the guidance file, none of them a path set, so they stay with `land-ticket` as they were before adoption. Unclaimed label `ready-for-agent`, the triage set's ready label the guidance file names.
 
 ## Upgrading
 
