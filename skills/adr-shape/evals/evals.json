@@ -6,13 +6,13 @@
       "name": "three-rejected-one-deferred",
       "prompt": "Write the ADR from this transcript. The ADR directory holds 0001-0004 and the architecture document is architecture.md, both attached.",
       "fixture": "fixtures/three-rejected-one-deferred/transcript.md and architecture.md, pasted in full after the prompt",
-      "expected_output": "A file 0005-<slug>.md in the shape: a title numbered 0005, a Proposed status naming the sync-prototype gate, a lead paragraph that closes open item 2 and ends by naming the architecture document section, numbered decisions with reasoning inline, Considered options with SQLite, the single JSON file and the bundle format each Rejected with a reason and the search index Deferred until its condition, Consequences with + and − lines and a Deferred, deliberately entry for the search index naming the open list. The architecture document gains a section opening with the pointer back that holds the field list, the parser and its version, the slug rules, the 50 MB warning and the 300 ms debounce; open item 2 is removed and the search index is added as an open item inheriting ADR 0003. The reply ends with a reversibility ranking over the ADR's decisions, and lint-adr.sh exits 0 on the file.",
+      "expected_output": "A file 0005-<slug>.md in the shape: a title numbered 0005, a Proposed status naming the sync-prototype gate, a lead paragraph that closes open item 2 and ends by naming the architecture document section, numbered decisions with reasoning inline, Considered options with SQLite, the single JSON file and the bundle format each Rejected with a reason and the search index Deferred until its condition, Consequences with + and \u2212 lines and a Deferred, deliberately entry for the search index naming the open list. The architecture document gains a section opening with the pointer back that holds the field list, the parser and its version, the slug rules, the 50 MB warning and the 300 ms debounce; open item 2 is removed and the search index is added as an open item inheriting ADR 0003. The reply ends with a reversibility ranking over the ADR's decisions, and lint-adr.sh exits 0 on the file.",
       "assertions": [
         "the ADR file is named 0005-<slug>.md and its title starts # 0005:",
         "SQLite, the single JSON file and the bundle format each appear under Considered options with Rejected and a reason",
         "the search index appears under Considered options with Deferred until and its condition",
         "the search index appears under Deferred, deliberately with a destination",
-        "the status line is Proposed — becomes Accepted when <gate>, and the gate names the sync prototype round-trip",
+        "the status line is Proposed \u2014 becomes Accepted when <gate>, and the gate names the sync prototype round-trip",
         "the lead paragraph names open item 2 as what the ADR closes and carries ADR 0003's requirement",
         "the lead paragraph's last sentence names the architecture document section holding the detail",
         "the front-matter field list, gray-matter and its version, the slug rules, the 50 MB warning and the 300 ms debounce are absent from the ADR",
@@ -21,6 +21,25 @@
         "open item 2 is removed from the architecture document and the search index is added as an open item inheriting ADR 0003",
         "the reply ends with a reversibility ranking over the ADR's numbered decisions",
         "bash lint-adr.sh on the drafted file exits 0"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "old-shape-mismatched-pointer",
+      "prompt": "Review this ADR against the shape. The architecture document is architecture.md; both are attached.",
+      "fixture": "fixtures/old-shape-mismatched-pointer/0004-attachments-beside-the-entry.md and architecture.md, pasted in full after the prompt",
+      "expected_output": "The review note in its fixed shape and nothing else. Closes: does not say. Decisions without reasoning: decision 1 (the bare Decision section). Options without a verdict: the single media database, the content-addressed store, inline base64. Reversible detail to move: the 25 MB limit, the 2048 px longest edge, and sharp 0.33, each to architecture.md \u00a7 Attachments. Missing pointers: the ADR names no architecture document section, and \u00a7 Attachments opens naming ADR 0003 rather than 0004. Status: a Status section rather than a **Status:** line, and Consequences without + and \u2212 signs or a Deferred, deliberately list. No sentence of the ADR is rewritten and no file is changed.",
+      "assertions": [
+        "the reply is the note in the six-line shape SKILL.md fixes, with every line present, and nothing after it",
+        "Closes reads does not say",
+        "decision 1 is listed under Decisions without reasoning",
+        "the single media database, the content-addressed store and inline base64 are each listed under Options without a verdict",
+        "the 25 MB limit is listed under Reversible detail to move with architecture.md \u00a7 Attachments as its destination",
+        "the 2048 px longest edge and sharp 0.33 are listed under Reversible detail to move with a destination",
+        "Missing pointers names the ADR's absent section sentence and that \u00a7 Attachments points at ADR 0003 instead of 0004",
+        "Status names the Status section in place of a **Status:** line and the Consequences lacking signs and a Deferred, deliberately list",
+        "the note contains no rewritten or proposed ADR text \u2014 no replacement lead paragraph, decision, option bullet or status line",
+        "neither the ADR nor architecture.md is modified"
       ]
     }
   ]
