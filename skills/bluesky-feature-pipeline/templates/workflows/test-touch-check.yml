@@ -1,0 +1,24 @@
+name: Test touch
+
+# A PR that changes a source file also changes a test file, or says why not — the label
+# no-tests-needed or a body line "No tests needed: <why>". Required in branch protection;
+# the rule and its messages are in scripts/test-touch-check.mjs.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test-touch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node .github/workflows/scripts/test-touch-check.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_GLOBS: "{{SOURCE_GLOBS}}"
+          TEST_GLOBS: "{{TEST_GLOBS}}"

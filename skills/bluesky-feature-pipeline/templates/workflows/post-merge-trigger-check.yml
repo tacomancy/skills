@@ -1,0 +1,24 @@
+name: Post-merge triggers
+
+# Each trigger from the guidance file's post-merge section — what a change obliges, and
+# the paths that fire it — is taken against the PR's changed files. A fired trigger needs
+# a body line naming it with the issue it obliged. The rule and its messages are in
+# scripts/post-merge-trigger-check.mjs.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  post-merge-triggers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node .github/workflows/scripts/post-merge-trigger-check.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          POST_MERGE_TRIGGERS: "{{POST_MERGE_TRIGGERS}}"
