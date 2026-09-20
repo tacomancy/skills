@@ -115,6 +115,54 @@ describe("driver.mjs — failures", () => {
   );
 
   test(
+    "an expected value on a step that cannot check it fails the run rather than passing unchecked",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [{ evaluate: "document.title", expected: "hidden-verify fixture" }],
+      });
+      expect(run.status).toBe(1);
+      expect(run.output).toContain("expected");
+      expect(run.output).not.toContain("evaluate document.title =");
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
+    "a type step with nothing focused fails naming the missing focus",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [{ type: "hello" }, { evaluate: "1" }],
+      });
+      expect(run.status).toBe(1);
+      expect(run.output).toContain("focus");
+      expect(run.output).not.toContain("evaluate 1");
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
+    "modifiers given as a string, not a list, fails naming the shape",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [{ key: "k", modifiers: "Meta" }],
+      });
+      expect(run.status).toBe(1);
+      expect(run.output).toContain("modifiers");
+      expect(run.output).toContain("list");
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
     "no target with the URL prefix within the timeout fails naming the prefix",
     async () => {
       const run = await drive({ urlPrefix: "app://vitrine/", ready: "body", timeoutMs: 1_500, steps: [{ evaluate: "1" }] });
@@ -162,8 +210,8 @@ describe("driver.mjs — failures", () => {
             { evaluate: "new Promise((resolve) => setTimeout(resolve, 10000))" },
             { evaluate: "2" },
           ],
-        }).run();
-        setTimeout(() => browser.close(), 1_500);
+          // Step 1's line is the signal that the driver is past readiness and into step 2.
+        }).run((chunk) => chunk.includes("evaluate 1 = 1") && browser.close());
         const run = await running;
         expect(run.status).toBe(1);
         expect(run.lines).toContain("evaluate 1 = 1");

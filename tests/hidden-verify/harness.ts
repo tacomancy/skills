@@ -48,13 +48,18 @@ export class Driver {
     writeFileSync(this.path, template.slice(0, start) + block + template.slice(end));
   }
 
-  // Asynchronous so a test can act on the browser — close it — while the driver is running.
-  run(): Promise<Run> {
+  // Asynchronous so a test can act on the browser — close it — while the driver is running;
+  // `onOutput` sees each chunk as it is printed, so the test acts on progress rather than a timer.
+  run(onOutput: (chunk: string) => void = () => {}): Promise<Run> {
     return new Promise((resolve, reject) => {
       const child = spawn(process.execPath, [this.path], { stdio: ["ignore", "pipe", "pipe"] });
       let output = "";
-      child.stdout.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
-      child.stderr.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
+      const collect = (chunk: string) => {
+        output += chunk;
+        onOutput(chunk);
+      };
+      child.stdout.setEncoding("utf8").on("data", collect);
+      child.stderr.setEncoding("utf8").on("data", collect);
       child.on("error", reject);
       child.on("close", (status) => resolve({ status: status ?? -1, output, lines: output.split("\n").filter((line) => line !== "") }));
     });

@@ -16,7 +16,7 @@
 //   { key: "<key>", modifiers: ["Meta", "Shift"] }        press and release; `key` as KeyboardEvent.key
 //                                                          names it, modifiers Alt, Control, Meta, Shift
 //                                                          → key Meta+Shift+k
-//   { type: "<text>" }                                     insert text into the focused element
+//   { type: "<text>" }                                     insert text into the focused editable element
 //                                                          → type "<text>"
 //   { style: "<selector>", property: "<css-property>" }  the computed value on the first match
 //                                                          → style <selector> <property> = <value>
@@ -179,13 +179,28 @@ async function pressKey(session, key, modifierNames) {
 }
 
 async function runStep(session, step) {
+  // An expectation the step cannot check would pass unchecked — a false proof — so it is refused.
+  if ("expected" in step && !(typeof step.style === "string" && typeof step.expected === "string")) {
+    throw new Error(`expected belongs on a style step, as a string: ${JSON.stringify(step)}`);
+  }
   if (typeof step.key === "string") {
     const modifiers = step.modifiers ?? [];
+    if (!Array.isArray(modifiers)) throw new Error(`modifiers must be a list, e.g. ["Meta", "Shift"]: ${JSON.stringify(step)}`);
     await pressKey(session, step.key, modifiers);
     console.log(`key ${[...modifiers, step.key].join("+")}`);
     return;
   }
   if (typeof step.type === "string") {
+    // Text inserted with nothing editable focused is dropped without a word from the runtime;
+    // checking first makes a forgotten focus step a failure rather than a passing record.
+    const focused = await evaluate(
+      session,
+      `(() => {
+        const el = document.activeElement;
+        return el !== null && el !== document.body && (el.isContentEditable || "value" in el);
+      })()`,
+    );
+    if (!focused) throw new Error("nothing editable has focus; focus a field first, e.g. { evaluate: \"document.querySelector('#field').focus()\" }");
     // Inserted as composed text, so a field receives it whole rather than as key events.
     await session.send("Input.insertText", { text: step.type });
     console.log(`type ${JSON.stringify(step.type)}`);
