@@ -160,3 +160,155 @@ describe("rebrand.mjs — the mapping file", () => {
     expect(run.output).toMatch(/usage/i);
   });
 });
+
+describe("rebrand.mjs — SVG attributes", () => {
+  test("fill and stroke attributes are substituted like any other colour literal", () => {
+    const fx = new Fixture();
+    fx.write({
+      "13.html": page("", "", '<svg><path fill="#123456" stroke=\'rgb(255, 255, 255)\' d="M0 0"/><circle fill=none stroke="url(#g)"/><stop stop-color="#FFF"/></svg>'),
+    });
+    fx.mapping({ "#123456": "var(--accent)", "#ffffff": "var(--paper)" });
+    expect(fx.rebrand("13.html").status).toBe(0);
+    expect(fx.read("out/13.html")).toContain(
+      '<svg><path fill="var(--accent)" stroke=\'var(--paper)\' d="M0 0"/><circle fill=none stroke="url(#g)"/><stop stop-color="var(--paper)"/></svg>',
+    );
+  });
+
+  test("an unknown colour in a fill attribute fails naming colour, file, and line", () => {
+    const fx = new Fixture();
+    fx.write({ "14.html": page("", "", '\n<svg>\n<rect fill="#ABCDEF"/>\n</svg>') });
+    fx.mapping({});
+    const run = fx.rebrand("14.html");
+    expect(run.status).toBe(1);
+    expect(run.output).toContain("#ABCDEF");
+    expect(run.output).toMatch(/14\.html:7\b/);
+    expect(fx.outputs()).toEqual([]);
+  });
+});
+
+describe("rebrand.mjs — alpha", () => {
+  test("an eight-digit colour is its own key, separate from its six-digit form", () => {
+    const fx = new Fixture();
+    fx.write({ "15.html": page("a { color: #1A1A1A; box-shadow: 0 1px rgba(26, 26, 26, 0.12); }", "border-color: #1a1a1a1F") });
+    fx.mapping({ "#1a1a1a": "var(--ink)" });
+    const run = fx.rebrand("15.html");
+    expect(run.status).toBe(1);
+    expect(run.output).toContain("rgba(26, 26, 26, 0.12)");
+    expect(run.output).toContain("#1a1a1a1f");
+    fx.mapping({ "#1a1a1a": "var(--ink)", "#1a1a1a1f": "var(--shadow)" });
+    expect(fx.rebrand("15.html").status).toBe(0);
+    const out = fx.read("out/15.html");
+    expect(out).toContain("a { color: var(--ink); box-shadow: 0 1px var(--shadow); }");
+    expect(out).toContain('style="border-color: var(--shadow)"');
+  });
+});
+
+describe("rebrand.mjs — idempotency", () => {
+  const mapping = { "#123456": "#0b3d91", "#ffffff": "var(--paper, #FAFAF8)", "#1a1a1a": "var(--ink)" };
+
+  test("running the script over its own output produces byte-identical files", () => {
+    const fx = new Fixture();
+    fx.write({ "16.html": page("a { color: #123456; background: #FFF; }", "color: #1a1a1a", '<svg><path fill="#123456" stroke="rgb(255,255,255)"/></svg>') });
+    fx.mapping(mapping);
+    expect(fx.rebrand("16.html").status).toBe(0);
+    const first = fx.read("out/16.html");
+    expect(first).toContain("a { color: #0b3d91; background: var(--paper, #FAFAF8); }");
+    const again = fx.rebrandWith(["--mapping", "mapping.json", "--out", "out2", "out/16.html"]);
+    expect(again).toMatchObject({ status: 0 });
+    expect(fx.read("out2/16.html")).toBe(first);
+  });
+
+  test("a colour that is a mapping value passes through unchanged, in any spelling", () => {
+    const fx = new Fixture();
+    fx.write({ "17.html": page("a { color: #0B3D91; } b { color: rgb(11, 61, 145); }", "") });
+    fx.mapping(mapping);
+    expect(fx.rebrand("17.html").status).toBe(0);
+    expect(fx.read("out/17.html")).toContain("a { color: #0B3D91; } b { color: rgb(11, 61, 145); }");
+  });
+
+  test("a colour that is neither a key nor a value still fails the run", () => {
+    const fx = new Fixture();
+    fx.write({ "18.html": page("a { color: #0b3d91; } b { color: #0b3d92; }", "") });
+    fx.mapping(mapping);
+    const run = fx.rebrand("18.html");
+    expect(run.status).toBe(1);
+    expect(run.output).toContain("#0b3d92");
+    expect(fx.outputs()).toEqual([]);
+  });
+
+  test("a target that is also a key is rejected, since a second run would map it again", () => {
+    const fx = new Fixture();
+    fx.write({ "19.html": page("a { color: #123456; }", "") });
+    fx.mapping({ "#123456": "#ABCDEF", "#abcdef": "var(--sky)" });
+    const run = fx.rebrand("19.html");
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("mapping.json");
+    expect(run.output).toContain("#123456");
+    expect(fx.outputs()).toEqual([]);
+  });
+});
+
+describe("rebrand.mjs — the pre-pass hook", () => {
+  // A hook in the shape the contract states: HTML on stdin, the export's path as its one
+  // argument, the HTML to map on stdout. This one is Vitrine's role rule: filled buttons
+  // take the accent, whatever grey the tool gave them.
+  const hook = `
+    let html = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => (html += chunk));
+    process.stdin.on("end", () => {
+      html = html.replace(/(class="btn"[^>]*background:)#eeeeee/g, "$1#2d5be3");
+      process.stdout.write(html + "<!-- hooked " + process.argv[2] + " -->\\n");
+    });
+  `;
+
+  test("a hook named in the mapping runs before substitution and its output is what gets mapped", () => {
+    const fx = new Fixture();
+    fx.write({
+      "20.html": page("", "", '<button class="btn" style="background:#eeeeee;color:#111111">Send</button>'),
+      "design/hook.mjs": hook,
+    });
+    // The hook's path is relative to the mapping file, and the grey it removes is not in the mapping.
+    fx.mapping({ "#2d5be3": "var(--sapphire)", "#111111": "var(--ink)" }, "design/mapping.json", { hook: "hook.mjs" });
+    const run = fx.rebrandWith(["--mapping", "design/mapping.json", "--out", "out", "20.html"]);
+    expect(run).toMatchObject({ status: 0 });
+    const out = fx.read("out/20.html");
+    expect(out).toContain('<button class="btn" style="background:var(--sapphire);color:var(--ink)">Send</button>');
+    expect(out).toContain("<!-- hooked 20.html -->");
+  });
+
+  test("a hook that exits non-zero fails the run naming the hook, and nothing is written", () => {
+    const fx = new Fixture();
+    fx.write({
+      "21.html": page("a { color: #111111; }", ""),
+      "hook.mjs": 'process.stderr.write("no role for this surface\\n"); process.exit(3);',
+    });
+    fx.mapping({ "#111111": "var(--ink)" }, "mapping.json", { hook: "hook.mjs" });
+    const run = fx.rebrand("21.html");
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("hook.mjs");
+    expect(run.output).toContain("no role for this surface");
+    expect(fx.outputs()).toEqual([]);
+  });
+
+  test("a hook that prints nothing fails the run rather than writing an empty export", () => {
+    const fx = new Fixture();
+    fx.write({ "23.html": page("a { color: #111111; }", ""), "hook.mjs": "process.stdin.resume();" });
+    fx.mapping({ "#111111": "var(--ink)" }, "mapping.json", { hook: "hook.mjs" });
+    const run = fx.rebrand("23.html");
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("hook.mjs");
+    expect(run.output).toMatch(/nothing|empty/);
+    expect(fx.outputs()).toEqual([]);
+  });
+
+  test("a hook that cannot be found is a mapping error", () => {
+    const fx = new Fixture();
+    fx.write({ "22.html": page("", "") });
+    fx.mapping({}, "mapping.json", { hook: "missing.mjs" });
+    const run = fx.rebrand("22.html");
+    expect(run.status).toBe(2);
+    expect(run.output).toContain("missing.mjs");
+    expect(fx.outputs()).toEqual([]);
+  });
+});
