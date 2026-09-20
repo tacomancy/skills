@@ -1,0 +1,14 @@
+[
+  {"query": "ok here's what the architecture review came back with for our billing service:\n1. move invoice PDFs from S3 to the Postgres blob column\n2. switch the retry lib from p-retry to async-retry\n3. rename the `customer_id` field in the public webhook payload to `accountId`\n4. bump the default page size from 25 to 50\nwhich of these would be hard to change later?", "should_trigger": true},
+  {"query": "can you rank these by reversibility? it's the list from the plan.md in docs/plans/2026-09-search-index.md — five items about the new search index, incl. the on-disk format and the tokenizer choice", "should_trigger": true},
+  {"query": "so we just finished the grill on the sync design (the 6 recommendations are above). what's sticky here?", "should_trigger": true},
+  {"query": "that's the last question I had — close out this round of recommendations please", "should_trigger": true},
+  {"query": "before I set ADR 0009 to accepted, go over its numbered decisions (there are four, in docs/adr/0009-plugin-api.md) and tell me which ones we'd regret if we had to undo them", "should_trigger": true},
+  {"query": "a vendor sent over their migration proposal, pasting it below. 7 bullet points. i dont really care about effort, i want to know which of these lock us in\n\n- adopt their SDK for auth\n- store sessions in their managed redis\n- use their event schema for audit logs\n- ...", "should_trigger": true},
+  {"query": "here are the 6 recommendations from the review — can you turn them into GitHub tickets, one per item, with the dependencies between them? repo is tacomancy/vitrine", "should_trigger": false},
+  {"query": "rank these five libraries by how hard they are to learn for a junior dev: zod, valibot, yup, io-ts, arktype. we're picking one for form validation", "should_trigger": false},
+  {"query": "I need to write a revert plan for PR #412 — it migrated the settings table. what steps do I take to roll it back safely in prod tonight?", "should_trigger": false},
+  {"query": "sort this list of recommendations by estimated effort, smallest first, and put a t-shirt size next to each. its the 8 items in notes/retro.md", "should_trigger": false},
+  {"query": "which of these three config options in vite.config.ts is actually making the dev server slow? build.sourcemap, server.watch.usePolling, or optimizeDeps.force", "should_trigger": false},
+  {"query": "here's the flat list of 12 recommendations from the accessibility audit. prioritise them by user impact for the next sprint", "should_trigger": false}
+]

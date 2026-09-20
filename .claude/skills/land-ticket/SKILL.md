@@ -10,7 +10,20 @@ The step after `implement` and `code-review`: a ticket's PR is open and reviewed
 
 ## 1. Gate
 
-Read the PR's checks and merge state. Done when every check passes and the merge state is clean. A failing check or a stale branch stops here: say which, and hand back — a fix or a rebase is the implementing session's work, and Auto-fix on the PR already wakes it.
+Read the PR's merge state first. A branch that is merely **behind** `main` — no conflicts — is brought up to date here, not handed back:
+
+```bash
+gh pr update-branch <PR>
+```
+
+Then wait on the check run for the PR's **current head SHA** — `gh pr checks --watch` reports the previous head's finished run and returns early, so find the run whose `headSha` is the head and watch that one:
+
+```bash
+gh run list --branch <branch> --json databaseId,headSha --jq '.[] | select(.headSha=="<head>") | .databaseId'
+gh run watch <run> --exit-status
+```
+
+Done when that run passes and the merge state reads `CLEAN`. A red check or a conflicting rebase stops here: say which, and hand back — the fix is the implementing session's work, and Auto-fix on the PR already wakes it.
 
 ## 2. Merge
 
@@ -54,4 +67,4 @@ for each open ticket under the same `skill/<name>` label. Done when the report n
 
 ## Report
 
-Five lines: the merge commit, the ticket closed, the site issue opened or "no trigger fired", the frontier, and anything handed back from the gate.
+Five lines: the merge commit, the ticket closed, the site issue opened or "no trigger fired", the frontier, and anything handed back from the gate — or that the branch was updated first.
