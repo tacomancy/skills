@@ -25,5 +25,5 @@ Every note, newest first, each showing its book's title. Searching filters notes
 ## Constraints
 
 - One user, no sharing, no accounts.
-- The typeface and palette come from the brand kit; the design tool proposes neither.
+- The final typeface and palette come from the brand kit; whatever the design tool proposes is a placeholder for them.
 - Keyboard: `n` starts a new note on the book surface; `/` focuses search on the notes surface.
