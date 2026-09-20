@@ -12,6 +12,7 @@ Each skill is a folder under `skills/` holding a `SKILL.md`; the skills are the 
 
 - `guidance-tiers` — frozen and living documentation tiers with a precedence rule and a CI-enforced check.
 - `hidden-verify` — build hidden-render verification into a desktop application: render unseen, capture a PNG, quit, with all state in a scratch directory.
+- `pin-prototypes` — draft the prompt set that takes a brief through a design tool, pin each accepted export with its PNG into a frozen folder, review it under the precedence rule, and rebrand it at build time through a total colour mapping.
 - `reversibility-rank` — close a round of recommendations with a ranked note of which ones would be hard to reverse: the sticky items first with why, the trivial ones in one line.
 
 ### Closing grill rounds with `reversibility-rank`
