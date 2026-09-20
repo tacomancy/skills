@@ -8,7 +8,7 @@ const LAUNCH_TIMEOUT = 60_000;
 async function drive(edit: Omit<Edit, "port">) {
   const browser = await Browser.open("page.html");
   try {
-    return new Driver({ port: browser.port, ...edit }).run();
+    return await new Driver({ port: browser.port, ...edit }).run();
   } finally {
     browser.close();
   }
@@ -37,15 +37,90 @@ describe("driver.mjs — against a headless page", () => {
     },
     LAUNCH_TIMEOUT,
   );
+
+  test(
+    "a key step with a modifier is what the page's keydown handler sees",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [
+          { key: "k", modifiers: ["Meta", "Shift"] },
+          { evaluate: "document.querySelector('#last-key').textContent" },
+        ],
+      });
+      expect(run).toMatchObject({ status: 0 });
+      expect(run.lines).toContain("key Meta+Shift+k");
+      expect(run.lines).toContain(`evaluate document.querySelector('#last-key').textContent = "Shift+Meta+k"`);
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
+    "a type step lands its text in the focused field",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [
+          { evaluate: "document.querySelector('#field').focus()" },
+          { type: "héllo world" },
+          { evaluate: "document.querySelector('#field').value" },
+        ],
+      });
+      expect(run).toMatchObject({ status: 0 });
+      expect(run.lines).toContain('type "héllo world"');
+      expect(run.lines).toContain(`evaluate document.querySelector('#field').value = "héllo world"`);
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
+    "a style step with a matching expected value reports expected beside actual",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [{ style: ".editor", property: "background-color", expected: "rgb(17, 34, 51)" }],
+      });
+      expect(run).toMatchObject({ status: 0 });
+      expect(run.lines).toContain("style .editor background-color = rgb(17, 34, 51) | expected rgb(17, 34, 51) | ok");
+    },
+    LAUNCH_TIMEOUT,
+  );
 });
 
 describe("driver.mjs — failures", () => {
+  test(
+    "a wrong expected value reports expected and actual, runs the rest, and fails the run",
+    async () => {
+      const run = await drive({
+        urlPrefix: "file://",
+        ready: READY,
+        timeoutMs: 15_000,
+        steps: [
+          { style: ".editor", property: "background-color", expected: "rgb(0, 0, 0)" },
+          { evaluate: "1" },
+        ],
+      });
+      expect(run.status).toBe(1);
+      expect(run.lines).toContain("style .editor background-color = rgb(17, 34, 51) | expected rgb(0, 0, 0) | MISMATCH");
+      expect(run.lines).toContain("evaluate 1 = 1");
+      expect(run.output).toContain("1 expectation failed");
+    },
+    LAUNCH_TIMEOUT,
+  );
+
   test(
     "no target with the URL prefix within the timeout fails naming the prefix",
     async () => {
       const run = await drive({ urlPrefix: "app://vitrine/", ready: "body", timeoutMs: 1_500, steps: [{ evaluate: "1" }] });
       expect(run.status).toBe(1);
       expect(run.output).toContain('"app://vitrine/"');
+      expect(run.output).toContain("launched without the debugging port");
       expect(run.output).not.toContain("evaluate 1");
     },
     LAUNCH_TIMEOUT,
@@ -53,7 +128,7 @@ describe("driver.mjs — failures", () => {
 
   test("nothing listening on the port fails the same way, naming the prefix and port", async () => {
     const port = await freePort();
-    const run = new Driver({ port, urlPrefix: "file://", ready: "body", timeoutMs: 1_000, steps: [] }).run();
+    const run = await new Driver({ port, urlPrefix: "file://", ready: "body", timeoutMs: 1_000, steps: [] }).run();
     expect(run.status).toBe(1);
     expect(run.output).toContain('"file://"');
     expect(run.output).toContain(String(port));
@@ -65,7 +140,40 @@ describe("driver.mjs — failures", () => {
       const run = await drive({ urlPrefix: "file://", ready: ".never-rendered", timeoutMs: 1_500, steps: [{ evaluate: "1" }] });
       expect(run.status).toBe(1);
       expect(run.output).toContain('".never-rendered"');
+      expect(run.output).toContain("fixture pointer");
       expect(run.output).not.toContain("evaluate 1");
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
+    "the app quitting mid-run fails naming the step it was on and the capture delay as the cause",
+    async () => {
+      const browser = await Browser.open("page.html");
+      try {
+        const running = new Driver({
+          port: browser.port,
+          urlPrefix: "file://",
+          ready: READY,
+          timeoutMs: 15_000,
+          steps: [
+            { evaluate: "1" },
+            // A promise the driver awaits, so the app is gone before this step returns.
+            { evaluate: "new Promise((resolve) => setTimeout(resolve, 10000))" },
+            { evaluate: "2" },
+          ],
+        }).run();
+        setTimeout(() => browser.close(), 1_500);
+        const run = await running;
+        expect(run.status).toBe(1);
+        expect(run.lines).toContain("evaluate 1 = 1");
+        expect(run.output).toContain("quit before the driver finished");
+        expect(run.output).toContain("step 2");
+        expect(run.output).toContain("capture delay");
+        expect(run.output).not.toContain("evaluate 2");
+      } finally {
+        browser.close();
+      }
     },
     LAUNCH_TIMEOUT,
   );

@@ -10,7 +10,19 @@
 </head>
 <body>
   <main class="editor">fixture</main>
+  <!-- Records the last keydown as the chord an application's shortcut handler would see. -->
+  <output id="last-key"></output>
+  <input id="field" type="text">
   <script>
+    document.addEventListener("keydown", (event) => {
+      const chord = [];
+      if (event.ctrlKey) chord.push("Control");
+      if (event.altKey) chord.push("Alt");
+      if (event.shiftKey) chord.push("Shift");
+      if (event.metaKey) chord.push("Meta");
+      chord.push(event.key);
+      document.querySelector("#last-key").textContent = chord.join("+");
+    });
     // Readiness arrives after first paint, the way an application's own start-up does,
     // so a driver that reads before it waits sees the page without the marker.
     setTimeout(() => document.querySelector(".editor").setAttribute("data-ready", ""), 300);
