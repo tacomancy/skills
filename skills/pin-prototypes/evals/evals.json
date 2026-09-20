@@ -1,0 +1,31 @@
+{
+  "skill_name": "pin-prototypes",
+  "evals": [
+    {
+      "id": 1,
+      "name": "three-surface-brief-drafts-a-complete-prompt-set",
+      "prompt": "Draft the design prompts for this project from its brief.",
+      "fixture": "fixtures/brief, copied into a fresh repository as docs/brief.md",
+      "expected_output": "One Markdown file: a running preamble; Prompt 0 marked run once, followed by prompt 01; prompts 01–03 for Library, Book, Notes across books, each with show, push back, and the-brief-settles parts; a push-back table with three rows copied from the push-back parts.",
+      "assertions": [
+        "Prompt 0 is marked run once and lists the three objects and three surfaces",
+        "exactly three surface prompts, numbered 01–03 in the brief's order, each with all three fixed parts",
+        "each push-back part names a pattern-matched answer the brief rules out (a storefront of covers, a rating, a recommendation, search by title)",
+        "each the-brief-settles part carries behaviour the brief specifies (shelf-move rule, note ordering, search on text only, keyboard keys)",
+        "the push-back table has one row per surface and no row invents a failure absent from its prompt"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "split-session-yields-a-standing-header-from-the-output",
+      "prompt": "Session 1 came back thin on the third surface. Here is the output for Prompt 0 and surfaces 01 and 02: <paste>. Give me what I need to start session 2.",
+      "fixture": "the prompt set from eval 1, plus a paste describing a rendered output with a named palette, type, left navigation, and a dense row layout",
+      "expected_output": "A standing header with palette, type, navigation, density lines taken from the paste, the object list and surface list from Prompt 0 with 01 and 02 marked done, and the instruction to open session 2 with it before prompt 03.",
+      "assertions": [
+        "every header line describes the paste, not the prompt's request",
+        "the object and surface lists match Prompt 0, with done surfaces marked",
+        "the response says to open the next session with the header, then run prompt 03"
+      ]
+    }
+  ]
+}
