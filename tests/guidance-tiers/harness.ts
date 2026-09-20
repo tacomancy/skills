@@ -4,11 +4,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const INSTALLED = "scripts/check-guidance.sh";
 const SCRIPT = fileURLToPath(new URL("../../skills/guidance-tiers/check-guidance.sh", import.meta.url));
 
 // `output` is stdout and stderr together, as a CI log shows them.
-const INSTALLED = "scripts/check-guidance.sh";
-
 export type Run = { status: number; output: string; lines: string[]; fails: string[] };
 
 // A throwaway git repository with a `main` branch, driven the way an owner's CI would
@@ -54,17 +53,20 @@ export class FixtureRepo {
   }
 
   // Copies the script into the repository with configuration lines rewritten, the way an
-  // owner edits the block at the top. `run` then drives the installed copy.
-  installScript(config: Record<string, string>): void {
+  // owner edits the block at the top. A string becomes a quoted value, an array a bash
+  // array. `run` then drives the installed copy instead of the one in the skill folder.
+  installScript(config: Record<string, string | string[]>): void {
     let script = readFileSync(SCRIPT, "utf8");
     for (const [name, value] of Object.entries(config)) {
       const line = new RegExp(`^${name}=.*$`, "m");
       if (!line.test(script)) throw new Error(`${name} is not a configuration variable of the script`);
-      script = script.replace(line, `${name}=${value}`);
+      const quoted = Array.isArray(value) ? `(${value.map((v) => JSON.stringify(v)).join(" ")})` : JSON.stringify(value);
+      script = script.replace(line, `${name}=${quoted}`);
     }
     this.write({ [INSTALLED]: script });
   }
 
+  // Runs the installed copy when `installScript` made one, else the skill's own script.
   run(...args: string[]): Run {
     const installed = join(this.dir, INSTALLED);
     const script = existsSync(installed) ? installed : SCRIPT;
@@ -85,5 +87,13 @@ export function conformingRepo(): FixtureRepo {
     "docs/architecture.md": "# Architecture\n",
     "docs/adr/0000-template.md": "# ADR template\n",
   });
+  return repo;
+}
+
+// The conforming repository with the mutation under test committed on a branch off `main`.
+export function onBranch(mutate: (repo: FixtureRepo) => void): FixtureRepo {
+  const repo = conformingRepo();
+  repo.branch("feature");
+  mutate(repo);
   return repo;
 }

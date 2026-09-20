@@ -1,13 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { conformingRepo, FixtureRepo } from "./harness";
-
-// The conforming repository with one feature commit on a branch off `main`.
-function onBranch(mutate: (repo: FixtureRepo) => void): FixtureRepo {
-  const repo = conformingRepo();
-  repo.branch("feature");
-  mutate(repo);
-  return repo;
-}
+import { conformingRepo, onBranch } from "./harness";
 
 describe("check-guidance.sh — the frozen tier", () => {
   test("a clean repository passes with a single pass line", () => {
