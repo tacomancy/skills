@@ -36,7 +36,7 @@ Each stage below states the same six things: who owns it, what it starts from, w
 
 ## 1. Operating picture
 
-- **Owner**: one session, once; run again when the vocabulary drifts, not on a schedule.
+- **Owner**: one session, once; run again when the vocabulary drifts.
 - **Starts from**: the set-up repository.
 - **Produces**: the shared vocabulary and the guidance scaffold — a frozen tier for the documents the project started from, a living tier for its current understanding, and the precedence rule between them in the guidance file.
 - **Authority ends** with the scaffold written and the vocabulary agreed. No feature is decided here.
@@ -120,7 +120,7 @@ A spec that turns out wrong is **flagged**, never built around: one comment on t
 
 Status labels layer on the adopter's own set, and each has one writer, so no state has two:
 
-- `spec:needs-grilling`, `spec:ready-for-tickets`, `spec:tickets-generated` — on the beat; moved by the spec session.
+- `spec:needs-grilling`, `spec:ready-for-tickets`, `spec:tickets-generated` — on the beat; the first set by the beats session at the stub's open, every move after by the spec session.
 - `ticket:in-review` on PR open and `ticket:landed` on merge — on the ticket; moved by the lifecycle workflow, never by a session.
 - `ticket:blocked` — a side state on the ticket; set by the ticket session when it flags, lifted by the spec session when it decides.
 - Issue **state** — closing a ticket, closing a beat on its last child — belongs to stage 8 alone; the workflows never close an issue.
