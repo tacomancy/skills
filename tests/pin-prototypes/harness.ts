@@ -31,9 +31,10 @@ export class Fixture {
     this.write({ [as]: fixture(fixtureFile) });
   }
 
-  // The mapping in the shape the script reads: colour keys under `colours`.
-  mapping(colours: Record<string, string>, as = "mapping.json"): void {
-    this.write({ [as]: JSON.stringify({ colours }, null, 2) + "\n" });
+  // The mapping in the shape the script reads: colour keys under `colours`, plus any
+  // other top-level field such as `hook`.
+  mapping(colours: Record<string, string>, as = "mapping.json", rest: Record<string, unknown> = {}): void {
+    this.write({ [as]: JSON.stringify({ colours, ...rest }, null, 2) + "\n" });
   }
 
   read(path: string): string {

@@ -7,19 +7,33 @@
 // build can call it wherever it already has Node.
 //
 // Usage: node rebrand.mjs --mapping FILE --out DIR EXPORT.html...
-//   --mapping FILE   JSON: { "colours": { "<normalised colour>": "<target>" } }. A key is
-//                    lowercase hex, six digits or eight with alpha. A target is written
-//                    verbatim: a hex, or a CSS variable reference such as var(--ink).
+//   --mapping FILE   JSON: { "colours": { "<normalised colour>": "<target>" }, "hook"?: PATH }.
+//                    A key is lowercase hex, six digits or eight with alpha; a colour with
+//                    alpha is its own key. A target is written verbatim: a hex, or a CSS
+//                    variable reference such as var(--ink). A target may not itself be a
+//                    key. "hook" is a Node script, relative to this file, run over each
+//                    export before substitution: the export's HTML on stdin, its path as
+//                    the one argument, the HTML to map on stdout; a non-zero exit fails
+//                    the run. It is where a project's role rules live (filled buttons take
+//                    the accent); the mapping then only needs to know what the hook emits.
 //   --out DIR        where the rebranded copies go, each under its export's basename
 //
 // A colour literal is a hex (#rgb, #rgba, #rrggbb, #rrggbbaa) or an rgb()/rgba() form in
-// a declaration value inside a <style> block or an inline style attribute. Text content,
-// other attributes, and selectors are not colours and are left alone.
+// a declaration value inside a <style> block or an inline style attribute, or the value
+// of an SVG fill, stroke, or stop-color attribute. Text content, other attributes,
+// selectors, url(...) and var(...) arguments are not colours and are left alone.
 //
-// Exit codes: 0 every file written; 1 an unknown colour; 2 usage, a bad mapping file, an
-// export that cannot be read, or an --out that would overwrite an export.
+// The run is idempotent: a colour that is a mapping value is already in the target
+// palette and passes through unchanged, so a run over its own output writes the same
+// bytes, provided the hook is a no-op over its own output too. Anything that is neither
+// a key nor a value still fails.
+//
+// Exit codes: 0 every file written; 1 an unknown colour; 2 usage, a bad mapping file, a
+// hook that fails, an export that cannot be read, or an --out that would overwrite an
+// export.
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 const KEY = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/;
 
@@ -64,7 +78,34 @@ function loadMapping(path) {
     if (!KEY.test(key)) fail(2, `${path}: mapping key ${JSON.stringify(key)} is not a normalised colour (lowercase six- or eight-digit hex)`);
     if (typeof target !== "string" || target === "") fail(2, `${path}: target for ${key} is not a non-empty string`);
   }
-  return colours;
+  // A run over its own output must change nothing, so a target that is itself a key —
+  // one a second run would map again — is a mapping error, not a chain to follow.
+  const values = new Set();
+  for (const [key, target] of Object.entries(colours)) {
+    const value = normalise(target);
+    if (value === null) continue;
+    if (value !== key && value in colours) fail(2, `${path}: target ${target} of ${key} is also a key; a rerun over the output would map it again`);
+    values.add(value);
+  }
+  // The hook lives with the mapping, so its path is read from the mapping's directory
+  // rather than from wherever the build happens to run.
+  let hook = parsed.hook;
+  if (hook !== undefined) {
+    if (typeof hook !== "string" || hook === "") fail(2, `${path}: "hook" must be a script path`);
+    hook = resolve(dirname(path), hook);
+    if (!existsSync(hook)) fail(2, `${path}: hook ${parsed.hook} not found at ${hook}`);
+  }
+  return { colours, values, hook };
+}
+
+// The pre-pass: the hook gets the export's HTML on stdin and its path as the one
+// argument, and prints the HTML to map. It runs under the same Node as this script so a
+// project ships one file with no interpreter to find.
+function prepass(hook, file, html) {
+  const result = spawnSync(process.execPath, [hook, file], { input: html, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.error) fail(2, `hook ${hook}: ${result.error.message}`);
+  if (result.status !== 0) fail(2, `hook ${hook} exited ${result.status} on ${file}\n${result.stderr}`);
+  return result.stdout;
 }
 
 const hex2 = (n) => n.toString(16).padStart(2, "0");
@@ -102,13 +143,32 @@ const LITERAL = /#[0-9a-z_-]+|rgba?\([^)]*\)/gi;
 const VALUE = /:([^;{}]*)(?=[;}])/g;
 
 const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi;
+// A style attribute is scanned as declarations; an SVG paint attribute is one value with
+// no property name, so the whole of it is the value. `none`, `currentColor`, and a named
+// colour are not literals and pass through, as they do in a declaration.
 const STYLE_ATTR = /\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
+const PAINT_ATTR = /\s(?:fill|stroke|stop-color)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
-// CSS comments and url(...) arguments blanked in place, so a commented-out colour or a
-// fragment reference such as url(#paint0) is not read as a colour, and offsets still
-// line up with the source.
+// CSS comments, url(...) and var(...) blanked in place, so a commented-out colour, a
+// fragment reference such as url(#paint0), or the fallback in var(--ink, #1a1a1a) is not
+// read as a colour, and offsets still line up with the source. var() is walked to its
+// matching paren because a fallback may itself hold parentheses: var(--x, rgb(1, 2, 3)).
 function blankNonColours(css) {
-  return css.replace(/\/\*[\s\S]*?\*\/|url\([^)]*\)/gi, (c) => " ".repeat(c.length));
+  let out = css.replace(/\/\*[\s\S]*?\*\//g, (c) => " ".repeat(c.length));
+  const FUNCTION = /\b(?:url|var)\(/gi;
+  let m;
+  while ((m = FUNCTION.exec(out)) !== null) {
+    let depth = 1;
+    let end = m.index + m[0].length;
+    while (end < out.length && depth > 0) {
+      if (out[end] === "(") depth++;
+      else if (out[end] === ")") depth--;
+      end++;
+    }
+    out = out.slice(0, m.index) + " ".repeat(end - m.index) + out.slice(end);
+    FUNCTION.lastIndex = end;
+  }
+  return out;
 }
 
 function lineAt(text, offset) {
@@ -118,13 +178,15 @@ function lineAt(text, offset) {
 }
 
 // Returns the rebranded document, or throws { literal, key, line } at the first colour
-// the mapping does not know.
-function rebrand(html, colours) {
+// the mapping does not know. A colour that is a mapping value is already in the target
+// palette — it is what the previous run wrote — and passes through as it stands.
+function rebrand(html, { colours, values }) {
   const edits = [];
   const scan = (text, base) => {
     for (const m of text.matchAll(LITERAL)) {
       const key = normalise(m[0]);
       const at = base + m.index;
+      if (key !== null && !(key in colours) && values.has(key)) continue;
       if (key === null || !(key in colours)) throw { literal: m[0], key, line: lineAt(html, at) };
       edits.push({ start: at, end: at + m[0].length, target: colours[key] });
     }
@@ -134,10 +196,12 @@ function rebrand(html, colours) {
     const css = blankNonColours(block[1]);
     for (const value of css.matchAll(VALUE)) scan(value[1], block.index + open + value.index + 1);
   }
-  for (const attr of html.matchAll(STYLE_ATTR)) {
-    const value = attr[1] ?? attr[2] ?? attr[3];
-    const closingQuote = attr[3] === undefined ? 1 : 0;
-    scan(blankNonColours(value), attr.index + attr[0].length - value.length - closingQuote);
+  for (const pattern of [STYLE_ATTR, PAINT_ATTR]) {
+    for (const attr of html.matchAll(pattern)) {
+      const value = attr[1] ?? attr[2] ?? attr[3];
+      const closingQuote = attr[3] === undefined ? 1 : 0;
+      scan(blankNonColours(value), attr.index + attr[0].length - value.length - closingQuote);
+    }
   }
   edits.sort((a, b) => a.start - b.start);
   let out = "";
@@ -156,7 +220,7 @@ function sameDirectory(a, b) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-const colours = loadMapping(args.mapping);
+const mapping = loadMapping(args.mapping);
 
 const seen = new Set();
 const written = [];
@@ -175,12 +239,14 @@ for (const file of args.files) {
   } catch (error) {
     fail(2, `${file}: ${error.message}`);
   }
+  if (mapping.hook) html = prepass(mapping.hook, file, html);
   try {
-    written.push({ path, html: rebrand(html, colours) });
+    written.push({ path, html: rebrand(html, mapping) });
   } catch (error) {
     if (!("literal" in error)) throw error;
     const because = error.key === null ? "is not a colour the script can read" : `normalises to ${error.key}, which the mapping does not know`;
-    fail(1, `${file}:${error.line}: unknown colour ${error.literal} — ${because}`);
+    const where = mapping.hook ? " (line counted in the hook's output)" : "";
+    fail(1, `${file}:${error.line}${where}: unknown colour ${error.literal} — ${because}`);
   }
 }
 
