@@ -7,7 +7,7 @@ description: Carry a blue-sky feature from an idea to landed tickets through eig
 
 A feature moves through eight **stages** after a one-time setup, each owned by one kind of **session** whose **authority ends** at a checkable point. The boundary is the point: no session holds the whole feature, so a session can be compacted, closed, or replaced between stages and the next one starts from what was written down. What is written down lives in the issue tracker and the repository — the brief's changelog, a **beat**'s issues and labels, a ticket's PR — never only in a session.
 
-Every stage names the skill that does its work and the fallback without it; the pipeline points at skills and requires none. The skill names in this file are roles first; where a specific skill is named, it is an example of the role.
+Every stage names the skill that does its work and the fallback without it; the pipeline points at skills and requires none. The skill names in this file are roles first; where a specific skill is named, it is an example of the role. A person working the stages by hand reads [`WORKFLOW.md`](WORKFLOW.md), which carries the same stages as a checklist with the reason for each.
 
 ## Session map
 
@@ -31,7 +31,7 @@ Each stage below states the same six things: who owns it, what it starts from, w
 - **Starts from**: a repository, with or without history.
 - **Produces**: the atomic skills the adopter wants installed; the issue templates, PR template, and workflows placed; the label set created; branch protection configured.
 - **Authority ends** when the checklist is done. No feature work starts here.
-- **Skill**: this skill's `install.sh` places the templates and workflows and creates the labels, asking for the **family** prefix — `skill/<name>`, as an example — at install; the checklist in `BRANCH_PROTECTION.md` is the remainder the script cannot do, each item with its reason. When the script exits naming a file it did not write, the repository has history: `ADOPTING.md` states the merge path, per file, and the path for tickets already open.
+- **Skill**: this skill's `install.sh` places the templates and workflows and creates the labels, asking for the **family** prefix — `skill/<name>`, as an example — at install; the checklist in [`BRANCH_PROTECTION.md`](BRANCH_PROTECTION.md) is the remainder the script cannot do, each item with its reason. When the script exits naming a file it did not write, the repository has history: `ADOPTING.md` states the merge path, per file, and the path for tickets already open.
 - **Without it**: none — the script ships with this skill.
 
 ## 1. Operating picture
