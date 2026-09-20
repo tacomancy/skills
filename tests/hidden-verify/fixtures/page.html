@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>hidden-verify fixture</title>
+  <style>
+    :root { --surface: rgb(17, 34, 51); }
+    .editor { background-color: var(--surface); min-height: 100px; }
+  </style>
+</head>
+<body>
+  <main class="editor">fixture</main>
+  <script>
+    // Readiness arrives after first paint, the way an application's own start-up does,
+    // so a driver that reads before it waits sees the page without the marker.
+    setTimeout(() => document.querySelector(".editor").setAttribute("data-ready", ""), 300);
+  </script>
+</body>
+</html>

@@ -25,4 +25,8 @@ The rule the skill exists to enforce: **a verification run never shows a window.
 
 The hook is application code: cover it in the application's tests as you would any feature, and let the ordinary path stay untouched by the mode.
 
+## Run a verification
+
+Drive the hidden run with [`driver.mjs`](driver.mjs), the template whose header states its contract: copy it into the session's scratch space, write the run — port, URL prefix, readiness selector, steps — in the block at the top of the copy, and run it with Node; the copy plus what it printed is the record of the run. Keep the copy in scratch. Commit one only when the project decides to keep a driver, and then beside its other verification tooling.
+
 Origin: Vitrine's shell snapshot mode (`VITRINE_SNAPSHOT`, `VITRINE_SNAPSHOT_AFTER`, `VITRINE_APP_SUPPORT_DIR`) and `docs/agents/run.md`.
