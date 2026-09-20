@@ -87,7 +87,7 @@ Three rules, obeyed by a write that touches an ADR already accepted and checked 
 
 ## The ADR directory
 
-`domain-modeling` keeps ADRs under `docs/adr/`, one file per decision, numbered four digits from the highest existing; this skill writes where it writes and numbers as it numbers, so the two never disagree on a file's name, and does not depend on it. Without it, the directory is the one the repository names in its guidance file, or `docs/adr/` when it names none, and the numbering rule is the same one — four digits, one past the highest, `0000` reserved for the template — which the lint enforces over the directory. The architecture document is likewise the one the repository names, or `docs/architecture.md` when it names none.
+`domain-modeling` keeps ADRs under `docs/adr/`, numbered four digits from the highest existing; this skill writes where it writes and numbers as it numbers, so the two never disagree on a file's name, and does not depend on it. Without it, the directory is the one the repository names in its guidance file, or `docs/adr/` when it names none, and the numbering is the same — four digits, one past the highest. In either case the template sits at `0000` in that directory, placed there under [With guidance-tiers](#with-guidance-tiers), and the lint enforces the numbering from `0000` up with no gap over the directory. The architecture document is likewise the one the repository names, or `docs/architecture.md` when it names none.
 
 ## The split rule
 
