@@ -15,6 +15,34 @@
         "the note reuses the round's numbering 1–6",
         "the reply starts at the heading line: no preamble, no restated recommendations"
       ]
+    },
+    {
+      "id": 2,
+      "name": "five-items-none-sticky",
+      "prompt": "Rank these by reversibility.",
+      "fixture": "fixtures/five-none-sticky/round.md, pasted in full after the prompt",
+      "expected_output": "One sentence saying nothing in the round is sticky, with the reason in one clause. No heading, no Trivial line, no to reverse / cheaper now pairs, nothing before or after the sentence.",
+      "assertions": [
+        "no item ranks sticky or conditional",
+        "the reply is a single sentence",
+        "the reply has no heading line, no Trivial line and no to reverse / cheaper now pair",
+        "the reply starts at that sentence: no preamble, no restated recommendations"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "four-items-one-conditional",
+      "prompt": "Rank these by reversibility.",
+      "fixture": "fixtures/one-conditional/round.md, pasted in full after the prompt",
+      "expected_output": "A note in the fixed shape: a heading line; item 1 as the only sticky item, its line naming the event (the sync feature shipping) and a kind; one Trivial line naming 2, 3 and 4; then an indented to reverse / cheaper now pair for item 1. Nothing before the heading and nothing after the pair.",
+      "assertions": [
+        "item 1 ranks sticky, and no other item does",
+        "item 1's line names the event after which it is sticky",
+        "item 1 carries a kind from the four the skill names",
+        "items 2, 3 and 4 appear together in a single Trivial line",
+        "item 1 has an indented pair with a to reverse line and a cheaper now line",
+        "the reply starts at the heading line: no preamble, no restated recommendations"
+      ]
     }
   ]
 }
