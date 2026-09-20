@@ -134,7 +134,7 @@ One writer per label, so no state has two:
 - `ticket:blocked`, a side state on the ticket: set by the ticket session when it flags, lifted by the spec session when it decides.
 - Closing a ticket or a beat: stage 8 alone.
 
-A ticket carries no status label until a session claims it; the tracker's ready label — `ready-for-agent`, as an example — is the unclaimed state.
+A ticket carries no status label until a session claims it; the tracker's ready label — `ready-for-agent`, as an example — is the unclaimed state, and the lifecycle workflow lifts it when the ticket's PR opens.
 
 ## Out of scope: an established codebase
 

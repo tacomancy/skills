@@ -5,12 +5,14 @@
 # adopting repository may have no other toolchain. Every check that can refuse runs before
 # the first write, so a refusal leaves the repository and the tracker untouched.
 #
-# Usage: install.sh --prefix PREFIX --source-globs GLOBS --test-globs GLOBS [--trigger 'NAME: GLOB, GLOB']...
-#   --prefix PREFIX       the family-label prefix, without its slash: `skill` gives `skill/<beat>`
-#   --source-globs GLOBS  comma-separated globs naming the repository's source files
-#   --test-globs GLOBS    comma-separated globs naming its test files
-#   --trigger ENTRY       one post-merge trigger from the guidance file, as `<name>: <glob>, <glob>`,
-#                         named for what it obliges; repeat per trigger, omit when the section names none
+# Usage: install.sh --prefix PREFIX --source-globs GLOBS --test-globs GLOBS [--trigger 'NAME: GLOB, GLOB']... [--unclaimed-label LABEL]
+#   --prefix PREFIX           the family-label prefix, without its slash: `skill` gives `skill/<beat>`
+#   --source-globs GLOBS      comma-separated globs naming the repository's source files
+#   --test-globs GLOBS        comma-separated globs naming its test files
+#   --trigger ENTRY           one post-merge trigger from the guidance file, as `<name>: <glob>, <glob>`,
+#                             named for what it obliges; repeat per trigger, omit when the section names none
+#   --unclaimed-label LABEL   the triage set's ready label, which a ticket carries until a session claims
+#                             it; the lifecycle mover lifts it at PR open. Omit when the set has none
 # The placeholder contract the values fill is templates/README.md.
 set -euo pipefail
 
@@ -22,18 +24,21 @@ prefix=""
 source_globs=""
 test_globs=""
 triggers=""
+unclaimed=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --prefix) prefix="${2-}"; shift 2 ;;
     --source-globs) source_globs="${2-}"; shift 2 ;;
     --test-globs) test_globs="${2-}"; shift 2 ;;
     --trigger) triggers="${triggers:+$triggers; }${2-}"; shift 2 ;;
+    --unclaimed-label) unclaimed="${2-}"; shift 2 ;;
     *) printf 'unknown argument: %s\n' "$1" >&2; usage ;;
   esac
 done
 
 # Every value sits in a double-quoted YAML string on one line, and each script exits on a
-# blank or malformed parameter; a wrong value fails here rather than on the first PR.
+# malformed parameter — a blank one too, except the unclaimed label, where blank means the
+# adopter has none; a wrong value fails here rather than on the first PR.
 [ -n "$prefix" ] && [ -n "$source_globs" ] && [ -n "$test_globs" ] || usage
 one_line() {
   case "$2" in
@@ -41,6 +46,7 @@ one_line() {
   esac
 }
 one_line --prefix "$prefix"; one_line --source-globs "$source_globs"; one_line --test-globs "$test_globs"
+one_line --unclaimed-label "$unclaimed"
 case "$prefix" in
   */|*[[:space:]]*) fail "--prefix is the label family without its slash or spaces, got: $prefix" ;;
 esac
@@ -78,6 +84,7 @@ render() {
     -e "s|{{SOURCE_GLOBS}}|$(escape "$source_globs")|g" \
     -e "s|{{TEST_GLOBS}}|$(escape "$test_globs")|g" \
     -e "s|{{POST_MERGE_TRIGGERS}}|$(escape "$triggers")|g" \
+    -e "s|{{UNCLAIMED_LABEL}}|$(escape "$unclaimed")|g" \
     "$1"
 }
 refused=0

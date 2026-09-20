@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { parse as parseYaml } from "yaml";
-import { prEvent, readRaw, Tracker } from "./harness";
+import { prEvent, readRaw, Tracker, UNCLAIMED } from "./harness";
 
 let tracker: Tracker;
 
@@ -16,12 +16,51 @@ afterEach(() => {
 });
 
 describe("PR opened", () => {
-  test("moves the ticket named by the closing keyword to ticket:in-review, and nothing more", async () => {
-    tracker = await new Tracker({ 12: { body: "## Parent\n\n#3\n", labels: ["skill/foo", "ready-for-agent"] } }).start();
+  const ticketBody = "## Parent\n\n#3\n";
+
+  // The PR is the claim: a ticket in review never reads as grabbable.
+  test("moves the ticket named by the closing keyword to ticket:in-review and lifts the unclaimed label, nothing more", async () => {
+    tracker = await new Tracker({ 12: { body: ticketBody, labels: ["skill/foo", UNCLAIMED] } }).start();
     const run = await tracker.run(prEvent("opened", { body: "Closes #12\n\n## Code review\n\nNone." }));
     expect(run).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual([UNCLAIMED]);
     expect(tracker.labelsAdded(12)).toEqual(["ticket:in-review"]);
-    expect(tracker.calls.map((c) => [c.method, c.path])).toEqual([["POST", "/repos/acme/widgets/issues/12/labels"]]);
+    expect(tracker.calls.map((c) => [c.method, c.path])).toEqual([
+      ["DELETE", `/repos/acme/widgets/issues/12/labels/${UNCLAIMED}`],
+      ["POST", "/repos/acme/widgets/issues/12/labels"],
+    ]);
+  });
+
+  test("a ticket that never carried the unclaimed label gains ticket:in-review, with nothing removed", async () => {
+    tracker = await new Tracker({ 12: { body: ticketBody, labels: ["skill/foo"] } }).start();
+    expect(await tracker.run(prEvent("opened", { body: "Closes #12" }))).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual([]);
+    expect(tracker.labelsAdded(12)).toEqual(["ticket:in-review"]);
+  });
+
+  test("the unclaimed label beyond the first page of labels is still lifted", async () => {
+    const labels = ["skill/foo", "area/docs", "area/tests", "area/ci", UNCLAIMED];
+    expect(labels.length).toBeGreaterThan(Tracker.PAGE_SIZE * 2);
+    tracker = await new Tracker({ 12: { body: ticketBody, labels } }).start();
+    expect(await tracker.run(prEvent("opened", { body: "Closes #12" }))).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual([UNCLAIMED]);
+  });
+
+  // An adopter with no ready label installs an empty parameter; the mover then lifts nothing at open.
+  test("an empty UNCLAIMED_LABEL removes nothing", async () => {
+    tracker = await new Tracker({ 12: { body: ticketBody, labels: ["skill/foo", UNCLAIMED] } }).start();
+    expect(await tracker.run(prEvent("opened", { body: "Closes #12" }), { UNCLAIMED_LABEL: "" })).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual([]);
+    expect(tracker.labelsAdded(12)).toEqual(["ticket:in-review"]);
+  });
+});
+
+describe("PR merged — the unclaimed label", () => {
+  // Merge moves the lifecycle label only; a ready label still on a landed ticket is a session's to explain.
+  test("is left where it is", async () => {
+    tracker = await new Tracker({ 3: {}, 12: { body: "## Parent\n\n#3\n", labels: [UNCLAIMED, "ticket:in-review"] } }).start();
+    expect(await tracker.run(prEvent("closed", { merged: true, body: "Closes #12" }))).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual(["ticket:in-review"]);
   });
 });
 
@@ -132,6 +171,15 @@ describe("failure", () => {
     expect(run.output).toMatch(/issues\/12\/labels.*404/);
   });
 
+  // Absent or unsubstituted, the parameter is an install fault, never "no label to lift".
+  test.each([undefined, "{{UNCLAIMED_LABEL}}"])("UNCLAIMED_LABEL set to %s is a failure before any call", async (value) => {
+    tracker = await new Tracker({ 12: { labels: [UNCLAIMED] } }).start();
+    const run = await tracker.run(prEvent("opened", { body: "Closes #12" }), { UNCLAIMED_LABEL: value });
+    expect(run.status).not.toBe(0);
+    expect(run.output).toMatch(/UNCLAIMED_LABEL/);
+    expect(tracker.calls).toEqual([]);
+  });
+
   test("a missing token is a failure, not an unauthenticated call", async () => {
     tracker = await new Tracker({ 12: {} }).start();
     const run = await tracker.run(prEvent("opened", { body: "Closes #12" }), { GITHUB_TOKEN: undefined });
@@ -151,7 +199,7 @@ describe("the workflow file", () => {
     expect(jobs).toHaveLength(1);
     const steps = jobs[0].steps;
     expect(steps.map((step) => step.uses ?? step.run)).toEqual([expect.stringMatching(/^actions\/checkout@/), "node .github/workflows/scripts/ticket-lifecycle.mjs"]);
-    expect(steps[1].env).toEqual({ GITHUB_TOKEN: "${{ github.token }}" });
+    expect(steps[1].env).toEqual({ GITHUB_TOKEN: "${{ github.token }}", UNCLAIMED_LABEL: "{{UNCLAIMED_LABEL}}" });
   });
 });
 
