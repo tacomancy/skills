@@ -1,15 +1,19 @@
 ---
 name: reversibility-rank
-description: Close a round of recommendations with a ranked note of which ones would be hard to reverse — the sticky items first, each with one line on why and a two-line deep-dive, the trivial ones in a single line. Use on any enumerated list of recommendations or decisions the user pastes.
+description: Close a round of recommendations with a ranked note of which ones would be hard to reverse — the sticky items first, each with one line on why and a two-line deep-dive, the trivial ones in a single line. Use when a round of recommendations or decisions is being closed — after `grill-me` or `grill-with-docs`, on an ADR's numbered decisions — on any such list the user pastes, and whenever they ask which of these would be hard to change, what's sticky here, or about reversibility.
 ---
 
 # Reversibility rank
 
-A round of recommendations arrives flat: every item reads as equally weighty. This skill answers the one question that decides which deserve a second look — *which of these would be a pain to change later?* — and answers nothing else. An item is **sticky**, **conditional**, or **trivial** by [the reversibility test](#the-reversibility-test) alone; the note comes out in [one fixed shape](#the-note), and a round with nothing sticky comes out as [one sentence](#the-empty-round).
+A round of recommendations arrives flat: every item reads as equally weighty. This skill answers the one question that decides which deserve a second look — *which of these would be a pain to change later?* — and answers nothing else. An item is **sticky**, **conditional**, or **trivial** by [the reversibility test](#the-reversibility-test) alone; the note comes out in [one fixed shape](#the-note), and a round with nothing sticky comes out as [one sentence](#the-empty-round). [The round](#the-round) is whatever list is in front of you, handed over by another skill or pasted.
+
+## The round
+
+Closing `grill-me` or `grill-with-docs`, the round is that skill's recommendations and the note is its last step. Closing `adr-shape`, the round is the ADR's numbered decisions, ranked before its status is set so a sticky decision gets one more look while it is still a draft. Invoked alone — none of those skills installed, or a list from somewhere else: a vendor proposal, a colleague's plan, a PR description — the list the user pasted is the round. The steps are the same in every case; only the list's source differs.
 
 ## 1. Number the list
 
-Take the list as pasted. When its items are already numbered or named, those numbers or names are the ones the note uses. When they are not, number them 1..N in the order given. Done when every item has the label the note will cite it by.
+Take the round as it stands. When its items are already numbered or named, those numbers or names are the ones the note uses. When they are not, number them 1..N in the order given. Done when every item has the label the note will cite it by.
 
 ## 2. Test every item
 
