@@ -10,30 +10,39 @@ The step after `implement` and `code-review`: a ticket's PR is open and reviewed
 
 ## 1. Gate
 
-Read the PR's merge state first. A branch that is merely **behind** `main` — no conflicts — is brought up to date here, not handed back:
+**Gate** on the PR's merge state and on the check run for its current head, in that order.
+
+Read the merge state through the tracker: clean, behind, or conflicting. A branch that is merely **behind** the base — no conflicts — is brought up to date here, through the tracker's update-branch operation, and the gate continues on the new head:
 
 ```bash
+# gh, as an example of the update-branch operation
 gh pr update-branch <PR>
 ```
 
-Then wait on the check run for the PR's **current head SHA** — `gh pr checks --watch` reports the previous head's finished run and returns early, so find the run whose `headSha` is the head and watch that one:
+Then wait on the check run whose head is the PR's **current head**: read the head SHA, list the runs for the branch, pick the one whose head matches, and watch that run to its conclusion. The head, not the PR's aggregate — a watch on the PR's checks reports the previous head's finished run and returns before the new one starts.
 
 ```bash
+# gh, as an example of list-runs-for-a-head and watch-a-run
+gh pr view <PR> --json headRefOid,headRefName --jq '.headRefOid, .headRefName'
 gh run list --branch <branch> --json databaseId,headSha --jq '.[] | select(.headSha=="<head>") | .databaseId'
 gh run watch <run> --exit-status
 ```
 
-Done when that run passes and the merge state reads `CLEAN`. A red check or a conflicting rebase stops here: say which, and hand back — the fix is the implementing session's work, and Auto-fix on the PR already wakes it.
+Done when that run passes and the merge state reads clean.
+
+**Hand back** on a red check or a conflicting update: stop, say which of the two it was and on which head, and go straight to the report — the fix is the implementing session's work, made where the context is. The report's last line carries what was handed back.
 
 ## 2. Merge
 
-Merge with a **merge commit** — the history is merge commits, one per PR — and delete the branch:
+Read the merge style from the base's recent history — the last ten commits on it — and match it: merge commits (`Merge pull request` entries), squashes (one commit per PR, no merge entries), or rebases (the PR's commits on the base, unchanged). Merge in that style through the tracker and delete the branch:
 
 ```bash
+# gh, as an example: --merge, --squash, or --rebase, whichever the history reads
+git log --oneline -10 <base>
 gh pr merge <PR> --merge --delete-branch
 ```
 
-Then check out `main` and pull. Done when `git log -1` on `main` is the merge commit.
+Then check out the base locally and pull. Done when the base's tip is the merge: `git log -1` on the base shows the merge commit, the squash, or the rebased head, matching the style read.
 
 ## 3. Close the ticket
 

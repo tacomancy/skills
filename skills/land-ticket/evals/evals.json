@@ -1,0 +1,31 @@
+{
+  "skill_name": "land-ticket",
+  "evals": [
+    {
+      "id": 1,
+      "name": "gate-waits-on-the-current-heads-run-not-the-pr-aggregate",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set, with the tracker answering as its § Tracker answers says: the branch is behind, the update moves the head from a1a1a1a to b2b2b2b, and the run for a1a1a1a is finished green while the run for b2b2b2b is in progress",
+      "expected_output": "The gate reads the head after the update, finds the run whose head is b2b2b2b, waits on that run, and only then reports the gate passed; the finished green run for a1a1a1a is named as the previous head's and never taken as the result.",
+      "assertions": [
+        "the run waited on is the one whose head is b2b2b2b, the head after the update",
+        "the finished run for a1a1a1a is not taken as the gate's result",
+        "the response says why the head's run and not the PR's aggregate: a watch on the PR's checks reports the previous head's finished run",
+        "the gate is reported done only once the b2b2b2b run passes and the merge state reads clean"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "behind-branch-is-updated-not-handed-back",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set, with the tracker answering as its § Tracker answers says: merge state BEHIND, no conflicts",
+      "expected_output": "The branch is brought up to date through the tracker's update-branch operation and the gate continues on the new head; nothing is handed back, and the report's last line says the branch was updated first.",
+      "assertions": [
+        "the update-branch operation is performed rather than a hand back",
+        "the gate continues on the head the update produced",
+        "the report's last line says the branch was updated first",
+        "hand back is reserved for a red check or a conflicting update, neither of which the fixture presents"
+      ]
+    }
+  ]
+}
