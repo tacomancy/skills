@@ -1,0 +1,10 @@
+:root {
+  --accent: #2f6fed;
+  --accent-soft: #dfe8fc;
+  --ink: #1b1b1f;
+}
+
+.sidebar li[aria-selected="true"] {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
