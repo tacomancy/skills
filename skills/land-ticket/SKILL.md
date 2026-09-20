@@ -108,3 +108,5 @@ Five lines, in this order, one per step so every step's output has a line to lan
 3. **Triggers** — each trigger's state: fired and done with what was done, fired and already covered with the issue linked, did not fire; or "none fired" or "no post-merge section".
 4. **Frontier** — the tickets a session can start now, and which of them this merge unblocked; or "no ticket set".
 5. **Handed back** — what the gate handed back and on which head, or that the branch was updated first, or that neither happened.
+
+Origin: `tacomancy/skills`' own loop — its `CLAUDE.md` § Specs and loop, step 4 — and the landings of #29, #37, #38, #40, #42, #43 and #46 there: the head-SHA rule from a merge that rode on a stale green check, the update-a-behind-branch rule from the same afternoon. The first pattern distilled from this repository rather than from Vitrine.
