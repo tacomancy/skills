@@ -97,10 +97,29 @@ fi
 } | place "$frozen_dir/README.md"
 
 # The living docs, each seeded with its shape and the one-line rule for what lives there.
+# The vocabulary file also takes the artefact's own terms when the artefact carries them
+# in the one shape that can be read without judgement: a table under a glossary heading.
+# Anything less regular is the agent's to read, so the seed stays honest.
+glossary() {
+  [ -n "$artefact_name" ] || return 0
+  awk '
+    /^#+ / { under = tolower($0) ~ /glossary|vocabulary|terminolog|primary objects|definitions/; next }
+    under && /^\|/ {
+      if ($0 ~ /^\|[[:space:]:|-]*$/) next
+      n = split($0, cell, "|")
+      if (rows++ == 0) next
+      term = cell[2]; meaning = cell[3]
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", term); gsub(/^[[:space:]]+|[[:space:]]+$/, "", meaning)
+      if (term != "") printf "- **%s** — %s\n", term, meaning
+    }
+  ' "$frozen_dir/$artefact_name"
+}
 {
   say "# Vocabulary"
   say
   say "The project's terms, one definition each. New vocabulary lives here and nowhere else; a term's meaning here wins over the frozen tier where the two differ."
+  terms="$(glossary)"
+  if [ -n "$terms" ]; then say; say "## From \`$artefact_name\`"; say; say "$terms"; fi
 } | place "$context"
 {
   say "# Architecture"
