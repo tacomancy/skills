@@ -32,7 +32,7 @@ An item is **sticky** when reversing it would:
 
 An item is **trivial** when reversing it is a code change behind one module, a number in code, a dependency swap with the same interface, a UI arrangement, or anything the round keeps out of any release.
 
-An item is **conditional** when it is trivial as shipped and becomes sticky at a named later event — a second consumer starts reading what it writes, the format it feeds ships, real users take it into their own files. A conditional item is a sticky item whose clock has not started: it ranks among the sticky ones, and its line names the event, so timing is part of the ranking rather than a footnote. Its kind is the kind it will be sticky for once the event lands.
+An item is **conditional** when it is trivial as shipped and becomes sticky at a named later event beyond its own release — a second consumer starts reading what it writes, the format it feeds ships, a later release exposes it in users' files. A conditional item is a sticky item whose clock has not started: it ranks among the sticky ones, and its line names the event, so timing is part of the ranking rather than a footnote. Its kind is the kind it will be sticky for once the event lands.
 
 ## Honesty rules
 
