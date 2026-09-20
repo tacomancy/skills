@@ -1,0 +1,27 @@
+{
+  "skill_name": "adr-shape",
+  "evals": [
+    {
+      "id": 1,
+      "name": "three-rejected-one-deferred",
+      "prompt": "Write the ADR from this transcript. The ADR directory holds 0001-0004 and the architecture document is architecture.md, both attached.",
+      "fixture": "fixtures/three-rejected-one-deferred/transcript.md and architecture.md, pasted in full after the prompt",
+      "expected_output": "A file 0005-<slug>.md in the shape: a title numbered 0005, a Proposed status naming the sync-prototype gate, a lead paragraph that closes open item 2 and ends by naming the architecture document section, numbered decisions with reasoning inline, Considered options with SQLite, the single JSON file and the bundle format each Rejected with a reason and the search index Deferred until its condition, Consequences with + and − lines and a Deferred, deliberately entry for the search index naming the open list. The architecture document gains a section opening with the pointer back that holds the field list, the parser and its version, the slug rules, the 50 MB warning and the 300 ms debounce; open item 2 is removed and the search index is added as an open item inheriting ADR 0003. The reply ends with a reversibility ranking over the ADR's decisions, and lint-adr.sh exits 0 on the file.",
+      "assertions": [
+        "the ADR file is named 0005-<slug>.md and its title starts # 0005:",
+        "SQLite, the single JSON file and the bundle format each appear under Considered options with Rejected and a reason",
+        "the search index appears under Considered options with Deferred until and its condition",
+        "the search index appears under Deferred, deliberately with a destination",
+        "the status line is Proposed — becomes Accepted when <gate>, and the gate names the sync prototype round-trip",
+        "the lead paragraph names open item 2 as what the ADR closes and carries ADR 0003's requirement",
+        "the lead paragraph's last sentence names the architecture document section holding the detail",
+        "the front-matter field list, gray-matter and its version, the slug rules, the 50 MB warning and the 300 ms debounce are absent from the ADR",
+        "each of those details is present in the architecture document under a section that opens with the shape ADR 0005 decided, in enough detail to write against",
+        "the file name pattern YYYY-MM-DD-<slug>.md is decided in the ADR",
+        "open item 2 is removed from the architecture document and the search index is added as an open item inheriting ADR 0003",
+        "the reply ends with a reversibility ranking over the ADR's numbered decisions",
+        "bash lint-adr.sh on the drafted file exits 0"
+      ]
+    }
+  ]
+}
