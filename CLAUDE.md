@@ -11,7 +11,7 @@ A skill exists because a GitHub issue labelled `spec` says what it does; nothing
 1. **`to-tickets`** on the spec — vertical slices, each blocked on its predecessors.
 2. **`implement`** per ticket on its own branch — drives **`tdd`** for every script the skill ships, and closes with **`code-review`**.
 3. **`code-review`** again before the PR if the branch moved.
-4. **`land-ticket`** once the PR is green — merges, closes the ticket, opens the site issue when a trigger in § The public site fired, and names the next frontier. Lives in `.claude/skills/`, not vendored.
+4. **`land-ticket`** once the PR is green — merges, closes the ticket, opens the site issue when a trigger in § The public site fired, and names the next frontier. A product skill of this repository: it lives in `skills/land-ticket/`, and `.claude/skills/land-ticket` is a committed symlink to it so `/land-ticket` runs here as the vendored skills do.
 
 Specs #2–#5 are blocked on #1, which lands the repository skeleton (test project, structural checks, CI). Vendored skill names above are the `.agents/skills/` ones; see § Setup.
 
