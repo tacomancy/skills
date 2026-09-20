@@ -58,6 +58,14 @@ describe("the status line", () => {
     expect(dir.lint("0001-store-raw.md")).toMatchObject({ status: 0, lines: [] });
   });
 
+  test("a status line under a section fails, naming the section", () => {
+    const dir = new FixtureDir();
+    dir.write({ "0001-store-raw.md": adr({ status: null, updates: "## Update (2026-09-19)\n\n**Status:** Accepted" }) });
+    const run = dir.lint("0001-store-raw.md");
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/Status.*## Update \(2026-09-19\)/)]);
+  });
+
   test("Superseded by something other than a number fails", () => {
     const dir = new FixtureDir();
     dir.write({ "0001-store-raw.md": adr({ status: "**Status:** Superseded by the new plan" }) });
@@ -108,6 +116,12 @@ describe("sections", () => {
     expect(run.lines).toEqual([expect.stringMatching(/## Update \(2026-09-19\).*## Consequences/)]);
   });
 
+  test("a required section that appears twice fails, naming it", () => {
+    const run = lintOne({ updates: "## Consequences\n\n- **+** again." });
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/## Consequences.*twice|twice.*## Consequences/)]);
+  });
+
   test("an Update that is not dated YYYY-MM-DD fails", () => {
     expect(lintOne({ updates: "## Update (dated)\n\nLater." })).toMatchObject({ status: 1, lines: [expect.stringContaining("## Update (dated)")] });
   });
@@ -137,6 +151,14 @@ describe("considered options", () => {
   test("an option without a bold lead is named by its first words", () => {
     const run = lintOne("- Store the normalised quote, because it is faster to compare.");
     expect(run.lines).toEqual([expect.stringContaining("Store the normalised quote")]);
+  });
+});
+
+describe("line endings", () => {
+  test("a conforming ADR saved with CRLF endings passes", () => {
+    const dir = new FixtureDir();
+    dir.write({ "0001-store-raw.md": adr().replace(/\n/g, "\r\n") });
+    expect(dir.lint("0001-store-raw.md")).toMatchObject({ status: 0, lines: [] });
   });
 });
 

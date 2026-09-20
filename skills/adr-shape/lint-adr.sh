@@ -40,7 +40,9 @@ lint_file() {
     *) bad "file name is not NNNN-<slug>.md"; return ;;
   esac
 
-  title="$(head -n 1 "$file")"
+  # A file saved with CRLF endings is read with its \r stripped, so the findings name the
+  # actual fault rather than a status that "is not" itself.
+  title="$(head -n 1 "$file" | tr -d '\r')"
   if [[ "$title" =~ ^#\ ([0-9]{4}):\ .+$ ]]; then
     [ "${BASH_REMATCH[1]}" = "$file_num" ] || bad "title number ${BASH_REMATCH[1]} disagrees with file name $name"
   else
@@ -51,7 +53,7 @@ lint_file() {
   # decision cannot silently become permanent; Superseded names the successor's number
   # and may say in a dash clause what of this ADR still stands. Anything else fails —
   # there is no default that lets an unknown word through.
-  status="$(grep -m 1 '^\*\*Status:\*\*' "$file" || true)"
+  status="$(grep -m 1 '^\*\*Status:\*\*' "$file" | tr -d '\r' || true)"
   if [ -z "$status" ]; then
     bad "no **Status:** line"
   else
@@ -69,6 +71,7 @@ lint_file() {
   # was written. Any other "## " heading is outside the shape and fails by name.
   seen_decisions=0; seen_options=0; seen_consequences=0; lead=0; section=""; option=""
   while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
     # A bullet under Considered options runs until the next bullet, blank line, or
     # heading; its verdict may sit on a wrapped line, so the bullet is judged whole.
     if [ "$section" = "## Considered options" ]; then
@@ -82,19 +85,24 @@ lint_file() {
         section="$line"
         case "$line" in
           "## Decisions")
+            [ $seen_decisions -eq 0 ] || bad "section appears twice: ## Decisions"
             [ $seen_options -eq 0 ] && [ $seen_consequences -eq 0 ] || bad "section out of order: ## Decisions comes before ## Considered options and ## Consequences"
             seen_decisions=1 ;;
           "## Considered options")
+            [ $seen_options -eq 0 ] || bad "section appears twice: ## Considered options"
             [ $seen_consequences -eq 0 ] || bad "section out of order: ## Considered options comes before ## Consequences"
             seen_options=1 ;;
-          "## Consequences") seen_consequences=1 ;;
+          "## Consequences")
+            [ $seen_consequences -eq 0 ] || bad "section appears twice: ## Consequences"
+            seen_consequences=1 ;;
           "## Update ("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]")"|"## Update ("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]", "*")")
             [ $seen_consequences -eq 1 ] || bad "$line appears before ## Consequences; updates are appended below it" ;;
           "## Update"*) bad "$line is not dated: the heading is \"## Update (YYYY-MM-DD)\"" ;;
           *) bad "section outside the shape: $line" ;;
         esac ;;
       "#"*) ;;
-      "**Status:**"*) ;;
+      # The status sits under the title; found under a section, it is not the ADR's status.
+      "**Status:**"*) [ -z "$section" ] || bad "**Status:** line under $section; it belongs directly under the title" ;;
       "")  ;;
       *) [ -z "$section" ] && lead=1 ;;
     esac
