@@ -1,0 +1,10 @@
+{
+  "colours": {
+    "#f7f7f5": "var(--paper)",
+    "#1a1a1a": "var(--ink)",
+    "#e5e5e0": "var(--rule)",
+    "#ffffff": "var(--paper-bright)",
+    "#1a1a1a1f": "var(--shadow)",
+    "#2d5be3": "#0b3d91"
+  }
+}

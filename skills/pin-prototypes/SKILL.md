@@ -5,7 +5,7 @@ description: Draft and run the prompt set that takes a project's brief through a
 
 # Pin prototypes
 
-A design tool's first answer for any well-known surface is the **pattern-matched** one — the inbox that looks like email — and asking for several surfaces in one prompt averages them. The skill's answer is a **prompt set** drafted from the brief: **Prompt 0** for the visual language, run once; one prompt per surface that names what to show, what the pattern-matched answer would be, and what the brief settles; and a **push-back table** written before any output exists, so the review of an output is anchored by the brief rather than by the output. The human runs the prompts; the agent drafts, distils the **standing header** that keeps later sessions on the first session's language, and **pins** each accepted output — HTML and a full-length PNG, numbered to its prompt — into a folder nothing edits, so an accepted output stays the decision it was. Once an output is pinned, the **precedence rule** says which of brief and prototype an implementer takes at its word.
+A design tool's first answer for any well-known surface is the **pattern-matched** one — the inbox that looks like email — and asking for several surfaces in one prompt averages them. The skill's answer is a **prompt set** drafted from the brief: **Prompt 0** for the visual language, run once; one prompt per surface that names what to show, what the pattern-matched answer would be, and what the brief settles; and a **push-back table** written before any output exists, so the review of an output is anchored by the brief rather than by the output. The human runs the prompts; the agent drafts, distils the **standing header** that keeps later sessions on the first session's language, and **pins** each accepted output — HTML and a full-length PNG, numbered to its prompt — into a folder nothing edits, so an accepted output stays the decision it was. Once an output is pinned, the **precedence rule** says which of brief and prototype an implementer takes at its word. When the project shows its pinned exports, a **rebrand** at build time maps the tool's palette onto the project's own through a total colour mapping that fails on any colour it does not know.
 
 ## 1. Draft
 
@@ -50,4 +50,12 @@ Read the brief section the surface implements and the surface's row in the push-
 
 A surface with no prototype gets a note all the same, under the checklist's no-prototype variant, with the same done criterion.
 
-Origin: Vitrine's `docs/reference/design-prompts.md` and its § Running these; `docs/reference/prototypes/` and the `prototypes/` line of `docs/reference/README.md`; `CLAUDE.md` § Precedence.
+## 5. Rebrand
+
+A pinned export carries the design tool's palette; the project's site or docs show it in the project's own. Rebranding is a build step over the frozen exports into a build output directory — never a second, committed copy — so the pinned files stay byte-for-byte and the palette lives in one mapping file the project owns.
+
+1. Write the mapping file, JSON with one `colours` object: each key a colour as the script normalises it — lowercase hex, six digits or eight with alpha — and each value the target, written verbatim into the output. The target is a hex, or a CSS variable reference when the output is served with the project's tokens: `"#1a1a1a": "var(--ink)"`. Build the first mapping by running the script against every export and adding each colour a `FAIL:` line names, until the run passes.
+2. Run [`rebrand.mjs`](rebrand.mjs) from the build, for example `node rebrand.mjs --mapping design/rebrand.json --out build/prototypes docs/reference/prototypes/*.html`. Its header states the flags and what counts as a colour literal. Done when it exits 0 and prints one `wrote` line per export.
+3. On a `FAIL:` line — file, line, the colour as written, and the key it normalises to — add that key to the mapping with the target the brand kit gives it, then rerun. The mapping is total: a failed run writes nothing, and the fix is always a new entry, never a default target and never an edit to the export.
+
+Origin: Vitrine's `docs/reference/design-prompts.md` and its § Running these; `docs/reference/prototypes/` and the `prototypes/` line of `docs/reference/README.md`; `CLAUDE.md` § Precedence; `Scripts/rebrand-prototypes.py` and the fail-on-unknown rule of its ADR 0004.
