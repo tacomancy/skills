@@ -15,14 +15,18 @@ app.whenReady().then(() => {
   win.loadURL("app://core/index.html");
 
   if (snapshotPath) {
+    // Every branch ends the process: a written PNG quits, a failed load or capture exits 1.
+    const fail = (err: unknown) => {
+      console.error(`snapshot failed: ${err}`);
+      app.exit(1);
+    };
+    win.webContents.once("did-fail-load", (_e, code, description) => fail(`${code} ${description}`));
     win.webContents.once("did-finish-load", () => {
-      setTimeout(async () => {
-        try {
-          const image = await win.webContents.capturePage();
-          writeFileSync(snapshotPath, image.toPNG());
-        } finally {
-          app.quit();
-        }
+      setTimeout(() => {
+        win.webContents
+          .capturePage()
+          .then((image) => writeFileSync(snapshotPath, image.toPNG()))
+          .then(() => app.quit(), fail);
       }, snapshotAfter);
     });
     return;
