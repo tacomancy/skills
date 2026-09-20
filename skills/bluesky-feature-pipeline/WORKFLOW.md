@@ -81,7 +81,7 @@ Each stage ends where the next one can check it started right: a brief with its 
 - [ ] Generate the tickets — `to-tickets`, as an example, or the ticket template — each with `## Parent` naming the beat, `## What to build`, `## Acceptance criteria`, `## Blocked by`, and the family label; move the label to `spec:tickets-generated`.
 - [ ] Read the guidance file's post-merge section and do what it obliges for the tickets just opened — a ticket set is a status change with no diff, as at stage 5.
 - [ ] From here the session decides and monitors: answer each **flag** on the beat's issue, order the landings under the beat. It implements nothing.
-- [ ] Ends with: the tickets opened, and the beat closed when its last ticket lands at stage 8.
+- [ ] Ends with: the tickets opened. The session then holds the beat — deciding, never implementing — until stage 8 closes it on its last ticket.
 
 **Your move**: one new session per stub, handed the stub's number. You decide when the spec is ready for tickets, whatever the session proposes. When the session is compacted or closed, open another: the beat's state is its issues and labels, and any session becomes the spec session by reading them.
 

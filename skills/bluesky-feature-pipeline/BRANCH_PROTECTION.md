@@ -9,7 +9,7 @@ The part of setup `install.sh` cannot do. Configure it once on the integration b
   - your existing CI;
   - the ticket-link check — the body names a ticket by a closing keyword and the ticket carries a family label, so nothing lands untraceable;
   - the test-touch check — a source change with no test change fails unless the body or a label says why, so a skipped TDD loop is visible;
-  - the post-merge-trigger check — a change that fires a trigger from the guidance file's post-merge section fails until the body links the issue it obliges, so the session that made the change meets the obligation rather than the landing discovering it.
+  - the post-merge-trigger check, once its workflow is installed — a change that fires a trigger from the guidance file's post-merge section fails until the body links the issue it obliges, so the session that made the change meets the obligation rather than the landing discovering it.
 - [ ] **Require branches to be up to date before merging.** A branch behind the base is updated and re-checked before it merges, which is the reconciliation the beat's session owns at stage 8; every required check above then speaks for the head that actually lands.
 - [ ] **Block force pushes.** A ticket branch is shared with the reviewer and with stage 8; its history stays as pushed.
 - [ ] **Block deletions.** The integration branch outlives every session that pushes to it.
