@@ -77,7 +77,13 @@ export class FixtureRepo {
 
   // The scaffold step of the skill, run from the repository root with the interview's answers.
   scaffold(...args: string[]): Run {
-    return collect(spawnSync("bash", [SCAFFOLD, ...args], { cwd: this.dir, encoding: "utf8" }));
+    return this.scaffoldFrom(".", ...args);
+  }
+
+  // The same, run from a directory inside the repository, as an agent whose shell is elsewhere would.
+  scaffoldFrom(subdir: string, ...args: string[]): Run {
+    mkdirSync(join(this.dir, subdir), { recursive: true });
+    return collect(spawnSync("bash", [SCAFFOLD, ...args], { cwd: join(this.dir, subdir), encoding: "utf8" }));
   }
 
   // Runs the installed copy when `installScript` made one, else the skill's own script.

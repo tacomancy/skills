@@ -8,7 +8,8 @@
 # Usage: scaffold.sh [flags]
 #   --artefact PATH       the frozen artefact: inside the repository it is moved into the
 #                         frozen tier, outside it is copied; omit when not yet in the repo
-#   --guidance FILE       the agent guidance file, CLAUDE.md or AGENTS.md (default CLAUDE.md)
+#   --guidance FILE       the agent guidance file, CLAUDE.md or AGENTS.md (default: the one
+#                         that exists; CLAUDE.md when neither does; required when both do)
 #   --architecture PATH   the living architecture document (default docs/architecture.md)
 #   --frozen-dir DIR      the frozen tier (default docs/reference)
 #   --context PATH        the vocabulary file (default CONTEXT.md)
@@ -19,7 +20,7 @@
 set -euo pipefail
 
 artefact=""
-guidance="CLAUDE.md"
+guidance=""
 architecture="docs/architecture.md"
 frozen_dir="docs/reference"
 context="CONTEXT.md"
@@ -39,20 +40,36 @@ while [ $# -gt 0 ]; do
     *) printf 'unknown flag: %s\n' "$1" >&2; exit 2 ;;
   esac
 done
-case "$guidance" in CLAUDE.md|AGENTS.md) ;; *) printf 'guidance file must be CLAUDE.md or AGENTS.md, got %s\n' "$guidance" >&2; exit 2 ;; esac
+case "$guidance" in ""|CLAUDE.md|AGENTS.md) ;; *) printf 'guidance file must be CLAUDE.md or AGENTS.md, got %s\n' "$guidance" >&2; exit 2 ;; esac
 case "$ci" in github|other) ;; *) printf -- '--ci must be github or other, got %s\n' "$ci" >&2; exit 2 ;; esac
-
-skill_dir="$(cd "$(dirname "$0")" && pwd)"
-root="$(git rev-parse --show-toplevel)"
-cd "$root"
 say() { printf '%s\n' "$*"; }
+abs_dir() { (cd "$(dirname "$1")" && pwd); }
 
-# Writes stdin to a file only when the file is absent.
+# Every check that can refuse runs before the first write, so a refusal leaves the
+# repository untouched. The artefact is resolved from the caller's directory, since the
+# scaffold may be run from anywhere inside the repository while every other path is
+# repository-relative.
+skill_dir="$(abs_dir "$0")"
+root="$(git rev-parse --show-toplevel)"
+if [ -n "$artefact" ]; then
+  [ -f "$artefact" ] || { printf 'artefact not found: %s\n' "$artefact" >&2; exit 2; }
+  artefact="$(abs_dir "$artefact")/$(basename "$artefact")"
+fi
+origin="${artefact#"$root"/}"
+cd "$root"
+if [ -z "$guidance" ]; then
+  if [ -e CLAUDE.md ] && [ -e AGENTS.md ]; then
+    printf 'both CLAUDE.md and AGENTS.md exist; pass --guidance to say which holds the precedence section\n' >&2; exit 2
+  elif [ -e AGENTS.md ]; then guidance="AGENTS.md"; else guidance="CLAUDE.md"; fi
+fi
+
+# `place` is the one way a piece reaches disk, so "only where absent" holds by construction.
 place() {
   if [ -e "$1" ]; then cat >/dev/null; say "found: $1"; else mkdir -p "$(dirname "$1")"; cat >"$1"; say "created: $1"; fi
 }
 
-# The frozen tier: the artefact moved or copied in, and the index README.
+# An artefact inside the repository moves so history follows it; one outside is copied,
+# since the original is not ours to take. `git mv` only knows tracked files.
 mkdir -p "$frozen_dir"
 artefact_name=""
 if [ -n "$artefact" ]; then
@@ -61,8 +78,10 @@ if [ -n "$artefact" ]; then
   if [ -e "$target" ]; then
     say "found: $target"
   else
-    case "$(cd "$(dirname "$artefact")" && pwd)/" in
-      "$root"/*) git mv "$artefact" "$target" 2>/dev/null || mv "$artefact" "$target"; say "moved: $artefact -> $target" ;;
+    case "$(abs_dir "$artefact")/" in
+      "$root"/*)
+        if git ls-files --error-unmatch "$artefact" >/dev/null 2>&1; then git mv "$artefact" "$target"; else mv "$artefact" "$target"; fi
+        say "moved: $origin -> $target" ;;
       *) cp "$artefact" "$target"; say "copied: $artefact -> $target" ;;
     esac
   fi
@@ -74,7 +93,7 @@ fi
   say
   say "## Contents"
   say
-  if [ -n "$artefact_name" ]; then say "- \`$artefact_name\` — the frozen artefact, brought in from \`$artefact\`."; else say "_Nothing yet; the artefact is not in the repository._"; fi
+  if [ -n "$artefact_name" ]; then say "- \`$artefact_name\` — the frozen artefact, brought in from \`$origin\`."; else say "_Nothing yet; the artefact is not in the repository._"; fi
 } | place "$frozen_dir/README.md"
 
 # The living docs, each seeded with its shape and the one-line rule for what lives there.
@@ -121,32 +140,32 @@ section() {
   say
   say "**Reading rule** — before working on any surface the frozen artefact describes, read the artefact in full: the whole document, this session, never a summary."
   say
-  say "**Writing rule** — new vocabulary goes in \`$context\`, a technical decision in \`$architecture\`, a resolved question in a new ADR in \`$adr_dir/\`. These three are the only homes for it."
+  say "**Writing rule** — new vocabulary goes in \`$context\`, a technical decision in \`$architecture\`, a resolved question in a new ADR in \`$adr_dir/\`. These three are the only homes for it; never a new file beside them."
   say
   say "\`$script\` enforces the tiers and runs in CI on every pull request."
 }
-if [ -e "$guidance" ]; then
-  { say; section; } >>"$guidance"; say "appended: $guidance § Guidance tiers"
-else
+# The section is the one piece added to a file that may already exist, so its heading is
+# what "absent" means here.
+if [ ! -e "$guidance" ]; then
   { say "# ${guidance%.md}"; say; section; } | place "$guidance"
+elif grep -q '^## Guidance tiers$' "$guidance"; then
+  say "found: $guidance"
+else
+  { say; section; } >>"$guidance"; say "appended: $guidance § Guidance tiers"
 fi
 
 # The check script, copied from beside this one with its configuration block filled in.
 # The repository owns the copy from here on: its rules are its own.
-if [ -e "$script" ]; then
-  say "found: $script"
-else
-  mkdir -p "$(dirname "$script")"
-  sed \
-    -e "s|^FROZEN_DIR=\"[^\"]*\"|FROZEN_DIR=\"$frozen_dir\"|" \
-    -e "s|^LIVING_DOCS=([^)]*)|LIVING_DOCS=(\"$context\" \"$architecture\")|" \
-    -e "s|^ADR_DIR=\"[^\"]*\"|ADR_DIR=\"$adr_dir\"|" \
-    "$skill_dir/check-guidance.sh" >"$script"
-  chmod +x "$script"
-  say "created: $script"
-fi
+[ -e "$script" ] && script_found=1 || script_found=0
+sed \
+  -e "s|^FROZEN_DIR=\"[^\"]*\"|FROZEN_DIR=\"$frozen_dir\"|" \
+  -e "s|^LIVING_DOCS=([^)]*)|LIVING_DOCS=(\"$context\" \"$architecture\")|" \
+  -e "s|^ADR_DIR=\"[^\"]*\"|ADR_DIR=\"$adr_dir\"|" \
+  "$skill_dir/check-guidance.sh" | place "$script"
+[ "$script_found" = 1 ] || chmod +x "$script"
 
-# The CI job. GitHub Actions gets a workflow; any other CI gets the one command to run.
+# GitHub Actions is the one CI whose job file has a known home; any other CI gets the
+# command and the owner wires it in.
 if [ "$ci" = "github" ]; then
   {
     say "name: guidance"
