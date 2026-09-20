@@ -40,7 +40,7 @@ Never silently violate these:
 
 ## The public site
 
-`tacomancy.com/skills/` is authored in `tacomancy/tacomancy`, not here. The page carries a status line (which specs are written, which skill is in tickets, what is installable), the six skills each with a one-line description, and the invariants above. Before merge, if the branch did any of the following, open an issue there — `gh issue create --repo tacomancy/tacomancy` — naming this PR and what the page should now say:
+`tacomancy.com/skills/` is authored in `tacomancy/tacomancy`, not here. The page carries a status line (which specs are written, which skill is in tickets, what is installable), the seven skills each with a one-line description, and the invariants above. Before merge, if the branch did any of the following, open an issue there — `gh issue create --repo tacomancy/tacomancy` — naming this PR and what the page should now say:
 
 - landed a skill, so the install line works for it and the status line moves;
 - added, removed, or renamed a skill, or changed the one line its `SKILL.md` frontmatter describes it with;
@@ -50,7 +50,7 @@ Never edit the site from this repository.
 
 ## Setup
 
-Vendor the loop's skills once per clone with `npx skills add mattpocock/skills`, picking `to-spec`, `to-tickets`, `implement`, `tdd`, `code-review`, `writing-for-agents`, `grill-me`; they land in `.agents/skills/` with symlinks in `.claude/skills/` and a `skills-lock.json`, the same arrangement as Vitrine. `skill-creator` is Anthropic's and needs no vendoring.
+Vendor the loop's skills once per clone with `npx skills add mattpocock/skills`, picking `to-spec`, `to-tickets`, `implement`, `tdd`, `code-review`, `writing-for-agents`, `grill-me`, and the skills `bluesky-feature-pipeline` names as examples of its roles — `grill-with-docs`, `wayfinder`, `handoff`, `diagnosing-bugs`; they land in `.agents/skills/` with symlinks in `.claude/skills/` and a `skills-lock.json`, the same arrangement as Vitrine. `skill-creator` is Anthropic's and needs no vendoring.
 
 ## Agent skills
 

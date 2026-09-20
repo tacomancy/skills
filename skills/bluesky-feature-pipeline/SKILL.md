@@ -137,3 +137,5 @@ Two, each with a mechanism, so neither is silent:
 ## Resumability
 
 A beat's state is its issues and labels: the stub's body and comments, its tickets, their labels, their PRs. A new session becomes the beat's spec session by reading those and nothing else, and a closed or compacted session takes nothing with it that the beat needs. The rule for every stage: state that would live only in a session is written to the tracker or the repository before the session ends.
+
+Origin: the sequence of sessions Vitrine's features ran through — one grilling the idea into a brief, one drafting the design-tool prompts, one reconciling the brief against what came back, one planning the beats, one per beat writing the spec and its tickets, one per ticket implementing — and `tacomancy/skills`' own loop in its `CLAUDE.md` § Specs and loop, with the boundaries learned when a session overstepped: a ticket session that reinterpreted its spec, a spec session compacted with the beat's state in it, a merge that rode on a self-posted status its rebase had orphaned.
