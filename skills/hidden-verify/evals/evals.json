@@ -26,7 +26,7 @@
         "does not run `pnpm dev` or the `lantern-dev` launch configuration",
         "names the four variables from main.ts rather than inventing new ones",
         "writes the guidance section (variables, build command, binary path, the pointer to this skill, the launch-configuration line) before or as part of the run",
-        "any question asked is about what the repository cannot answer (which packages the launch depends on), asked once"
+        "any question asked is about what the repository cannot answer (the last-opened pointer, the change to prove), asked in one message"
       ]
     }
   ]
