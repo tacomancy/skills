@@ -75,6 +75,13 @@ describe("test-touch check", () => {
 });
 
 describe("unknown input stays a failure", () => {
+  test("an API answer that is not the API's fails with an error, not a stack trace", async () => {
+    github.garbage = "<html>Service unavailable</html>";
+    const run = await github.run(SCRIPT, payload({ number: 40, body: "" }), ENV);
+    expect(run.status).toBe(2);
+    expect(run.stderr).toMatch(/^ERROR: /);
+  });
+
   test("unsubstituted globs fail with an error naming the parameter", async () => {
     github.pullFiles(40, ["README.md"]);
     const run = await github.run(SCRIPT, payload({ number: 40, body: "" }), { SOURCE_GLOBS: "{{SOURCE_GLOBS}}", TEST_GLOBS: "tests/**" });

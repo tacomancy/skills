@@ -47,6 +47,12 @@ describe("post-merge-trigger check", () => {
     expect(run.status).toBe(1);
   });
 
+  test("the trigger's name inside another line's prose does not count; the name leads the line", async () => {
+    github.pullFiles(40, ["skills/foo/SKILL.md"]);
+    const run = await github.run(SCRIPT, payload({ number: 40, body: "Closes #12 for the public site\n" }), ENV);
+    expect(run.status).toBe(1);
+  });
+
   test("the trigger's name without an issue reference does not count", async () => {
     github.pullFiles(40, ["skills/foo/SKILL.md"]);
     const run = await github.run(SCRIPT, payload({ number: 40, body: "the public site: nothing to do\n" }), ENV);
@@ -79,6 +85,13 @@ describe("post-merge-trigger check", () => {
 });
 
 describe("unknown input stays a failure", () => {
+  test("an API answer that is not the API's fails with an error, not a stack trace", async () => {
+    github.garbage = "<html>Service unavailable</html>";
+    const run = await github.run(SCRIPT, payload({ number: 40, body: "" }), ENV);
+    expect(run.status).toBe(2);
+    expect(run.stderr).toMatch(/^ERROR: /);
+  });
+
   test("an unsubstituted trigger list fails with an error naming the parameter", async () => {
     github.pullFiles(40, ["README.md"]);
     const run = await github.run(SCRIPT, payload({ number: 40, body: "" }), { POST_MERGE_TRIGGERS: "{{POST_MERGE_TRIGGERS}}" });

@@ -40,6 +40,6 @@ What each check reads from the PR, so a filer knows what passes it:
 
 - **Ticket link**: a closing keyword — `Closes #N`, `Fixes #N`, `Resolves #N` and their forms — naming an issue that carries a `<prefix>/<beat>` label. Every issue so named is checked.
 - **Test touch**: a source file changed without a test file changed fails unless the PR carries the label `no-tests-needed` or a body line `No tests needed: <why>` with the reason filled in.
-- **Post-merge triggers**: a trigger whose globs match a changed file is linked by a body line that names the trigger and references an issue — `the public site: owner/repo#N`, or an issue URL. Each fired trigger needs its own line.
+- **Post-merge triggers**: a trigger whose globs match a changed file is linked by a body line that leads with the trigger's name (a list marker before it is fine) and references an issue after it — `the public site: owner/repo#N`, or an issue URL. Each fired trigger needs its own line.
 
 The repository's `tests/bluesky-feature-pipeline/` holds the shape of each template, the placeholder contract, and each script's behaviour driven with fixture payloads against a served API.

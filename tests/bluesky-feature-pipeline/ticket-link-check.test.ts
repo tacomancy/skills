@@ -81,6 +81,13 @@ describe("ticket-link check", () => {
 });
 
 describe("unknown input stays a failure", () => {
+  test("an API answer that is not the API's fails with an error, not a stack trace", async () => {
+    github.garbage = "<html>Service unavailable</html>";
+    const run = await github.run(SCRIPT, payload({ number: 40, body: "Closes #12" }), ENV);
+    expect(run.status).toBe(2);
+    expect(run.stderr).toMatch(/^ERROR: /);
+  });
+
   test("an unsubstituted family prefix fails with an error, not a pass", async () => {
     github.issue({ number: 12, labels: ["skill/land-ticket"] });
     const run = await github.run(SCRIPT, payload({ number: 40, body: "Closes #12" }), { FAMILY_LABEL_PREFIX: "{{FAMILY_PREFIX}}/" });

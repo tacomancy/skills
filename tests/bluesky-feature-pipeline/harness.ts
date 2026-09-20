@@ -82,11 +82,14 @@ export class FakeGitHub {
   readonly requests: string[] = [];
   private issues = new Map<number, Issue>();
   private files = new Map<number, string[]>();
+  // When set, every answer is this text with status 200 — a proxy page, not the API.
+  garbage: string | undefined;
 
   constructor() {
     this.server = createServer((req, res) => {
       const url = new URL(req.url ?? "/", "http://fake");
       this.requests.push(url.pathname + url.search);
+      if (this.garbage !== undefined) return void res.writeHead(200, { "content-type": "text/html" }).end(this.garbage);
       const issue = /^\/repos\/[^/]+\/[^/]+\/issues\/(\d+)$/.exec(url.pathname);
       const files = /^\/repos\/[^/]+\/[^/]+\/pulls\/(\d+)\/files$/.exec(url.pathname);
       if (issue) return respond(res, this.issues.get(Number(issue[1])));

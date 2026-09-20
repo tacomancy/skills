@@ -14,14 +14,23 @@
 
 import { readFileSync } from "node:fs";
 
-const fail = (message) => {
-  process.stderr.write(`FAIL: ${message}\n`);
-  process.exit(1);
+// The exit code is set and the process left to drain stdio rather than exited mid-write,
+// so the line reaches the log wherever stdout is an asynchronous pipe.
+const quit = (code, line) => {
+  process.stderr.write(`${line}\n`);
+  process.exitCode = code;
+  throw new Quit();
 };
-const error = (message) => {
-  process.stderr.write(`ERROR: ${message}\n`);
-  process.exit(2);
+class Quit extends Error {}
+const fail = (message) => quit(1, `FAIL: ${message}`);
+const error = (message) => quit(2, `ERROR: ${message}`);
+const crash = (cause) => {
+  if (cause instanceof Quit) return;
+  process.stderr.write(`ERROR: unexpected: ${cause?.stack ?? cause}\n`);
+  process.exitCode = 2;
 };
+process.on("uncaughtException", crash);
+process.on("unhandledRejection", crash);
 
 const prefix = process.env.FAMILY_LABEL_PREFIX ?? "";
 if (prefix === "" || /\{\{|\}\}/.test(prefix)) {
@@ -58,7 +67,9 @@ async function getIssue(number) {
   }
   if (response.status === 404) return null;
   if (!response.ok) error(`GET issues/${number} answered ${response.status}`);
-  return response.json();
+  const issue = await response.json().catch((cause) => error(`GET issues/${number} did not answer JSON: ${cause.message}`));
+  if (typeof issue !== "object" || issue === null) error(`GET issues/${number} did not answer an issue`);
+  return issue;
 }
 
 const problems = [];
