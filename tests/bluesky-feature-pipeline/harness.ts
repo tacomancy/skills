@@ -45,23 +45,23 @@ import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import { AddressInfo } from "node:net";
 
-const LIFECYCLE = join(TEMPLATES, "scripts/ticket-lifecycle.js");
+const LIFECYCLE = join(TEMPLATES, "workflows/scripts/ticket-lifecycle.mjs");
 const REPO = "acme/widgets";
 
-export type Issue = { body?: string; labels?: string[]; state?: "open" | "closed" };
-export type Call = { method: string; path: string; body: unknown };
-export type Run = { status: number; output: string };
+export type TrackerIssue = { body?: string; labels?: string[]; state?: "open" | "closed" };
+export type TrackerCall = { method: string; path: string; body: unknown };
+export type MoverRun = { status: number; output: string };
 
 // A fake tracker: serves the issues it is given, pages every list at PAGE_SIZE so a
 // script that stops at page one is caught, and records every request it receives.
 // Writes are recorded, acknowledged, and never applied — the tests assert on the calls.
 export class Tracker {
   static readonly PAGE_SIZE = 2;
-  readonly calls: Call[] = [];
+  readonly calls: TrackerCall[] = [];
   private server!: Server;
   private url = "";
 
-  constructor(readonly issues: Record<number, Issue>) {}
+  constructor(readonly issues: Record<number, TrackerIssue>) {}
 
   async start(): Promise<this> {
     this.server = createServer((req, res) => {
@@ -109,11 +109,11 @@ export class Tracker {
 
   // Runs the script against this tracker with the payload written where Actions puts it.
   // Asynchronous because the stub answers from this same event loop.
-  run(event: unknown, env: Record<string, string | undefined> = {}): Promise<Run> {
+  run(event: unknown, env: Record<string, string | undefined> = {}): Promise<MoverRun> {
     const dir = mkdtempSync(join(tmpdir(), "ticket-lifecycle-"));
     const eventPath = join(dir, "event.json");
     writeFileSync(eventPath, JSON.stringify(event));
-    const child = spawn("node", [LIFECYCLE], {
+    const child = spawn(process.execPath, [LIFECYCLE], {
       env: { PATH: process.env.PATH, GITHUB_EVENT_PATH: eventPath, GITHUB_REPOSITORY: REPO, GITHUB_API_URL: this.url, GITHUB_TOKEN: "stub-token", ...env },
     });
     let output = "";

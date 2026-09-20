@@ -7,8 +7,8 @@ The tracker files the install script places in an adopting repository, laid out 
 | `ISSUE_TEMPLATE/spec-stub.md` | `.github/ISSUE_TEMPLATE/spec-stub.md` | a **beat** as a spec awaiting its grill: `spec` and `spec:needs-grilling` on it, the beat name as the title, the brief, the scope, and what "ready for tickets" needs |
 | `ISSUE_TEMPLATE/ticket.md` | `.github/ISSUE_TEMPLATE/ticket.md` | a ticket in the one shape `to-tickets` produces — `## Parent`, `## What to build`, `## Acceptance criteria`, `## Blocked by` — for a repository without that skill |
 | `pull_request_template.md` | `.github/pull_request_template.md` | a PR that names its ticket by a closing keyword and carries the review under `## Code review`, the heading the landing gate reads |
-| `workflows/ticket-lifecycle-labels.yml` | `.github/workflows/ticket-lifecycle-labels.yml` | the lifecycle-label mover's shell: runs `scripts/ticket-lifecycle.js` on PR open and close |
-| `scripts/ticket-lifecycle.js` | `.github/scripts/ticket-lifecycle.js` | the mover itself, plain Node: `ticket:in-review` on the ticket at open; `ticket:landed` on it and a comment on the beat its `## Parent` names at merge |
+| `workflows/ticket-lifecycle-labels.yml` | `.github/workflows/ticket-lifecycle-labels.yml` | the lifecycle-label mover's shell: runs `scripts/ticket-lifecycle.mjs` on PR open and close |
+| `workflows/scripts/ticket-lifecycle.mjs` | `.github/workflows/scripts/ticket-lifecycle.mjs` | the mover itself, plain Node: `ticket:in-review` on the ticket at open; `ticket:landed` on it and a comment on the beat its `## Parent` names at merge |
 
 The issue templates are markdown with front matter rather than issue forms: a form renders each field as an `###` heading, and the workflows and `land-ticket` read the `##` sections `to-tickets` writes. This file stays here; it is not installed.
 
@@ -27,6 +27,6 @@ The repository's `tests/bluesky-feature-pipeline/` holds the shape of each templ
 
 ## The workflows
 
-Each workflow's logic is one Node script under `scripts/`; the YAML picks the events, grants the permission, and runs it. A script reads what Actions sets — the event payload at `GITHUB_EVENT_PATH`, `GITHUB_REPOSITORY`, `GITHUB_API_URL` — and the token the YAML passes as `GITHUB_TOKEN`; a test drives it the same way, with a recording stub at the API URL.
+Each workflow's logic is one Node script under `workflows/scripts/`; the YAML picks the events, grants the permission, and runs it. A script reads what Actions sets — the event payload at `GITHUB_EVENT_PATH`, `GITHUB_REPOSITORY`, `GITHUB_API_URL` — and the token the YAML passes as `GITHUB_TOKEN`; a test drives it the same way, with a recording stub at the API URL.
 
 The lifecycle mover finds the ticket by the PR body's closing keyword and the beat by the ticket's `## Parent` section alone — the first `#<n>` or `/issues/<n>` inside it, matched as a number, never a `Spec:` line or a reference elsewhere in the body. It reads the ticket's labels through every page before it writes, holds one lifecycle label at a time — the other of `ticket:in-review` and `ticket:landed` goes when present, the target comes when absent — and leaves `ticket:blocked` as the side state it is. It writes labels and comments and nothing else: no call closes or reopens an issue or touches a `spec:` label. A PR with no closing keyword, or closed without merging, moves nothing; a tracker error fails the run.

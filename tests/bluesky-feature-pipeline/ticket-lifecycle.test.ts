@@ -133,7 +133,7 @@ describe("the workflow file", () => {
     const jobs = Object.values(workflow.jobs) as Array<{ steps: Array<Record<string, unknown>> }>;
     expect(jobs).toHaveLength(1);
     const steps = jobs[0].steps;
-    expect(steps.map((step) => step.uses ?? step.run)).toEqual([expect.stringMatching(/^actions\/checkout@/), "node .github/scripts/ticket-lifecycle.js"]);
+    expect(steps.map((step) => step.uses ?? step.run)).toEqual([expect.stringMatching(/^actions\/checkout@/), "node .github/workflows/scripts/ticket-lifecycle.mjs"]);
     expect(steps[1].env).toEqual({ GITHUB_TOKEN: "${{ github.token }}" });
   });
 });

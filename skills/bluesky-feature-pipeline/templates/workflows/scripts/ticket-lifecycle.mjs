@@ -7,7 +7,7 @@
 // Runs where Actions puts it: the event in GITHUB_EVENT_PATH, the repository in
 // GITHUB_REPOSITORY, a token in GITHUB_TOKEN, the API at GITHUB_API_URL. Node only.
 
-const { readFileSync } = require("node:fs");
+import { readFileSync } from "node:fs";
 
 const IN_REVIEW = "ticket:in-review";
 const LANDED = "ticket:landed";

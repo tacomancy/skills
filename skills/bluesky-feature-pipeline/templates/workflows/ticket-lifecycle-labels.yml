@@ -8,7 +8,7 @@ name: Ticket lifecycle labels
 # ticket, belong to the landing session; this workflow never changes issue state.
 # The labels come from the pipeline's install script; nothing here creates one.
 #
-# The logic is scripts/ticket-lifecycle.js beside this file's install path; this
+# The logic is scripts/ticket-lifecycle.mjs beside this file; this
 # file only picks the events and runs it.
 #
 # `pull_request` gives a fork's PR a read-only token, so the label write fails
@@ -30,6 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node .github/scripts/ticket-lifecycle.js
+      - run: node .github/workflows/scripts/ticket-lifecycle.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
