@@ -178,9 +178,9 @@ describe("the command line", () => {
   test("a directory lints every NNNN-*.md in it, one line per finding, each naming its file", () => {
     const dir = new FixtureDir();
     dir.write({
+      "docs/adr/0000-template.md": readFileSync(TEMPLATE, "utf8"),
       "docs/adr/0001-store-raw.md": adr(),
       "docs/adr/0002-second.md": adr({ title: "# 0002: A second decision", status: null }),
-      "docs/adr/README.md": "# ADRs\n",
     });
     const run = dir.lint("docs/adr");
     expect(run.status).toBe(1);
@@ -197,5 +197,59 @@ describe("the command line", () => {
     const dir = new FixtureDir();
     const result = spawnSync("bash", [SCRIPT], { cwd: dir.dir, encoding: "utf8" });
     expect(result.status).toBe(2);
+  });
+});
+
+// Numbering is the rule guidance-tiers' check-guidance.sh applies to the same directory,
+// so a repository running both gets one answer: four digits from 0000 (the template),
+// no gap, no duplicate, every entry NNNN-*.md.
+describe("numbering across a directory", () => {
+  const withTemplate = (files: Record<string, string>) => {
+    const dir = new FixtureDir();
+    dir.write({ "docs/adr/0000-template.md": readFileSync(TEMPLATE, "utf8"), ...files });
+    return dir.lint("docs/adr");
+  };
+
+  test("the template at 0000 and consecutive ADRs pass with no output", () => {
+    expect(withTemplate({ "docs/adr/0001-store-raw.md": adr(), "docs/adr/0002-second.md": adr({ title: "# 0002: A second decision" }) })).toMatchObject({ status: 0, lines: [] });
+  });
+
+  test("a gap fails at the first missing number, naming the directory", () => {
+    const run = withTemplate({ "docs/adr/0001-store-raw.md": adr(), "docs/adr/0003-third.md": adr({ title: "# 0003: A third decision" }) });
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/^docs\/adr: .*gap.*0003.*0002/)]);
+  });
+
+  test("a missing template is a gap at 0000", () => {
+    const dir = new FixtureDir();
+    dir.write({ "docs/adr/0001-store-raw.md": adr() });
+    const run = dir.lint("docs/adr");
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/^docs\/adr: .*gap.*0001.*0000/)]);
+  });
+
+  test("a duplicate number fails, naming it", () => {
+    const run = withTemplate({ "docs/adr/0001-store-raw.md": adr(), "docs/adr/0001-store-cooked.md": adr() });
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/^docs\/adr: .*duplicate.*0001/)]);
+  });
+
+  test("an entry not named NNNN-*.md fails by name", () => {
+    const run = withTemplate({ "docs/adr/0001-store-raw.md": adr(), "docs/adr/README.md": "# ADRs\n" });
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual([expect.stringMatching(/^docs\/adr\/README\.md: .*NNNN/)]);
+  });
+
+  test("directory findings and per-file findings come out in one run", () => {
+    const run = withTemplate({ "docs/adr/0002-second.md": adr({ title: "# 0002: A second decision", status: null }) });
+    expect(run.status).toBe(1);
+    expect(run.lines).toEqual(expect.arrayContaining([expect.stringMatching(/^docs\/adr: .*gap/), expect.stringMatching(/^docs\/adr\/0002-second\.md: .*Status/)]));
+    expect(run.lines).toHaveLength(2);
+  });
+
+  test("the template passed as a file on its own is linted like any file", () => {
+    const dir = new FixtureDir();
+    dir.write({ "0000-template.md": readFileSync(TEMPLATE, "utf8") });
+    expect(dir.lint("0000-template.md").status).toBe(1);
   });
 });
