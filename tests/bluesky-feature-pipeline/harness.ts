@@ -8,6 +8,19 @@ export const TEMPLATES = fileURLToPath(new URL("../../skills/bluesky-feature-pip
 // The token the install script replaces with the adopter's family-label prefix.
 export const PLACEHOLDER = "{{FAMILY_PREFIX}}";
 
+// Every token the install script substitutes, and the files each may appear in. A token
+// is `{{NAME}}`; an Actions expression `${{ … }}` is not one and stays as written.
+export const PLACEHOLDERS: Record<string, RegExp> = {
+  "{{FAMILY_PREFIX}}": /./,
+  "{{SOURCE_GLOBS}}": /^workflows\//,
+  "{{TEST_GLOBS}}": /^workflows\//,
+  "{{POST_MERGE_TRIGGERS}}": /^workflows\//,
+};
+
+export function tokensIn(text: string): string[] {
+  return text.match(/(?<!\$)\{\{[^}]*\}\}/g) ?? [];
+}
+
 export type Template = { frontmatter: Record<string, unknown>; body: string; headings: string[] };
 
 // Reads a template the way GitHub does: a YAML front-matter block, then the body that

@@ -1,0 +1,24 @@
+name: Ticket link
+
+# Every PR names the one ticket it lands with a closing keyword, and that ticket carries
+# a {{FAMILY_PREFIX}}/<beat> label. Required in branch protection; the rule and its
+# messages are in scripts/ticket-link-check.mjs.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  ticket-link:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node .github/workflows/scripts/ticket-link-check.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FAMILY_LABEL_PREFIX: "{{FAMILY_PREFIX}}/"

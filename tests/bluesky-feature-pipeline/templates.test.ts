@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { allTemplateFiles, PLACEHOLDER, readRaw, readTemplate, type Template } from "./harness";
+import { allTemplateFiles, PLACEHOLDER, PLACEHOLDERS, readRaw, readTemplate, tokensIn, type Template } from "./harness";
 
 describe("ticket template", () => {
   // The four sections `to-tickets` publishes, in its order, so a hand-made ticket reads
@@ -61,11 +61,18 @@ describe("PR template", () => {
 describe("placeholders", () => {
   const files = allTemplateFiles().filter((path) => path !== "README.md");
 
-  test("the family prefix is the only substitution point, in every template", () => {
+  test("the documented tokens are the only substitution points, each in the files it belongs to", () => {
     for (const path of files) {
-      const tokens = readRaw(path).match(/\{\{[^}]*\}\}/g) ?? [];
-      expect(tokens.every((token) => token === PLACEHOLDER), `${path} has ${tokens.join(", ")}`).toBe(true);
+      for (const token of tokensIn(readRaw(path))) {
+        expect(PLACEHOLDERS[token]?.test(path), `${path} has ${token}`).toBe(true);
+      }
     }
+  });
+
+  test("the workflow parameters appear in every workflow's env, so no check runs with a default", () => {
+    const workflows = files.filter((path) => /^workflows\/[^/]+\.yml$/.test(path));
+    const found = new Set(workflows.flatMap((path) => tokensIn(readRaw(path))));
+    for (const token of Object.keys(PLACEHOLDERS)) expect(found, token).toContain(token);
   });
 
   // The prefix carries no trailing slash; the template supplies the `/` before the beat.
@@ -80,14 +87,16 @@ describe("placeholders", () => {
     }
   });
 
-  test("substituting the prefix leaves nothing for a second run to change", () => {
+  test("substituting every token leaves nothing for a second run to change", () => {
     for (const path of files) {
-      expect(readRaw(path).replaceAll(PLACEHOLDER, "skill")).not.toMatch(/\{\{|\}\}/);
+      let text = readRaw(path);
+      for (const token of Object.keys(PLACEHOLDERS)) text = text.replaceAll(token, "x");
+      expect(tokensIn(text), path).toEqual([]);
     }
   });
 
-  test("the contract is documented beside the templates", () => {
-    expect(readRaw("README.md")).toContain(PLACEHOLDER);
+  test("every token's contract is documented beside the templates", () => {
+    for (const token of Object.keys(PLACEHOLDERS)) expect(readRaw("README.md")).toContain(token);
   });
 });
 
