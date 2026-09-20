@@ -144,4 +144,56 @@ describe("scaffold.sh in a partially populated repository", () => {
     expect(repo.read("docs/architecture.md")).toContain("## Decided");
     expect(run.output).toContain("created: docs/architecture.md");
   });
+
+  test("run twice, the second run changes nothing and creates nothing", () => {
+    const repo = new FixtureRepo();
+    expect(repo.scaffold("--artefact", artefactOutside(), "--guidance", "CLAUDE.md").status).toBe(0);
+    repo.commit("guidance tiers", {});
+    const again = repo.scaffold("--artefact", artefactOutside(), "--guidance", "CLAUDE.md");
+    expect(again.status).toBe(0);
+    expect(repo.git("status", "--porcelain")).toBe("");
+    expect(again.lines.filter((l) => !l.startsWith("found: "))).toEqual([]);
+  });
+
+  test("a pre-existing check script that matches the template is reported as such", () => {
+    const repo = new FixtureRepo();
+    repo.scaffold("--guidance", "CLAUDE.md", ...customLayout);
+    const again = repo.scaffold("--guidance", "CLAUDE.md", ...customLayout);
+    expect(again.output).toMatch(/^found: scripts\/check-guidance.sh.*matches the template/m);
+  });
+
+  test("a pre-existing check script that differs is left in place and summarised against the template", () => {
+    const repo = new FixtureRepo();
+    repo.scaffold("--guidance", "CLAUDE.md");
+    const installed = repo.read("scripts/check-guidance.sh");
+    const edited = installed.replace(/^ADR_DIR=.*$/m, 'ADR_DIR="docs/decisions"') + "\n# the owner's own rule\necho extra\n";
+    repo.write({ "scripts/check-guidance.sh": edited });
+    const again = repo.scaffold("--guidance", "CLAUDE.md");
+    expect(again.status).toBe(0);
+    expect(repo.read("scripts/check-guidance.sh")).toBe(edited);
+    expect(again.output).toMatch(/^found: scripts\/check-guidance.sh.*differs from the template/m);
+    expect(again.output).toMatch(/ADR_DIR/);
+    expect(again.output).toMatch(/\+4 -1 lines/);
+  });
+
+  test("a pre-existing check script with its configuration block removed names every missing value", () => {
+    const repo = new FixtureRepo();
+    repo.scaffold("--guidance", "CLAUDE.md");
+    const stripped = repo.read("scripts/check-guidance.sh").split("\n").filter((l) => !/^[A-Z_]+=/.test(l)).join("\n");
+    repo.write({ "scripts/check-guidance.sh": stripped });
+    const again = repo.scaffold("--guidance", "CLAUDE.md");
+    expect(again.status).toBe(0);
+    expect(again.output).toMatch(/configuration differs in .*ADR_DIR/);
+    expect(again.output).toMatch(/FROZEN_DIR/);
+    expect(again.output).toMatch(/LIVING_DOCS/);
+  });
+
+  test("a precedence heading with trailing whitespace still counts as present", () => {
+    const repo = new FixtureRepo();
+    repo.write({ "CLAUDE.md": "# Claude\n\n## Guidance tiers  \n\nThe owner's own.\n" });
+    const run = repo.scaffold();
+    expect(run.status).toBe(0);
+    expect(repo.read("CLAUDE.md").match(/## Guidance tiers/g)).toHaveLength(1);
+    expect(run.output).toContain("found: CLAUDE.md");
+  });
 });

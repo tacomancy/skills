@@ -148,21 +148,39 @@ section() {
 # what "absent" means here.
 if [ ! -e "$guidance" ]; then
   { say "# ${guidance%.md}"; say; section; } | place "$guidance"
-elif grep -q '^## Guidance tiers$' "$guidance"; then
+elif grep -q '^## Guidance tiers[[:space:]]*$' "$guidance"; then
   say "found: $guidance"
 else
   { say; section; } >>"$guidance"; say "appended: $guidance § Guidance tiers"
 fi
 
 # The check script, copied from beside this one with its configuration block filled in.
-# The repository owns the copy from here on: its rules are its own.
-[ -e "$script" ] && script_found=1 || script_found=0
+# The repository owns the copy from here on: its rules are its own, so an existing copy is
+# never replaced, only measured against the template so the report can say how far it
+# has drifted.
+config_lines() { grep -E '^[A-Z_]+=' "$1" | sort; }
+template="$(mktemp)"
+trap 'rm -f "$template"' EXIT
 sed \
   -e "s|^FROZEN_DIR=\"[^\"]*\"|FROZEN_DIR=\"$frozen_dir\"|" \
   -e "s|^LIVING_DOCS=([^)]*)|LIVING_DOCS=(\"$context\" \"$architecture\")|" \
   -e "s|^ADR_DIR=\"[^\"]*\"|ADR_DIR=\"$adr_dir\"|" \
-  "$skill_dir/check-guidance.sh" | place "$script"
-[ "$script_found" = 1 ] || chmod +x "$script"
+  "$skill_dir/check-guidance.sh" >"$template"
+if [ ! -e "$script" ]; then
+  place "$script" <"$template"
+  chmod +x "$script"
+else
+  # `git diff --no-index` exits 1 whenever the files differ, in content or in mode; any other
+  # exit is a real failure. Only content counts as drift.
+  numstat="$(git diff --no-index --numstat "$template" "$script" || [ $? -eq 1 ])"
+  read -r added removed _ <<<"${numstat:-0 0}"
+  if [ "$added" = 0 ] && [ "$removed" = 0 ]; then
+    say "found: $script (matches the template)"
+  else
+    config="$(comm -3 <(config_lines "$template") <(config_lines "$script") | tr -d '\t' | cut -d= -f1 | sort -u | tr '\n' ' ')"
+    say "found: $script (differs from the template: +$added -$removed lines${config:+; configuration differs in ${config% }})"
+  fi
+fi
 
 # GitHub Actions is the one CI whose job file has a known home; any other CI gets the
 # command and the owner wires it in.
