@@ -1,6 +1,6 @@
 ---
 name: land-ticket
-description: Merge a ticket's green PR, close the ticket, open the public-site issue when the change moved the page, and report the new frontier.
+description: Land a reviewed PR: gate on the check run for its current head, merge in the history's style, close the ticket and its parent on the last child, act on the guidance file's post-merge triggers, and report the frontier this merge unblocked.
 disable-model-invocation: true
 ---
 
