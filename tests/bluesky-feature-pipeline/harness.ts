@@ -256,3 +256,121 @@ export function prEvent(action: "opened" | "closed", opts: { body?: string; merg
     repository: { full_name: REPO },
   };
 }
+
+// ---------------------------------------------------------------------------------------
+// The install script: driven as an adopter drives it, from the root of a git repository
+// with a tracker CLI on PATH. The CLI is a stub that records every call and keeps the
+// labels it was told to create, so a test reads what the script asked of the tracker
+// and a second run sees the labels the first one made.
+
+import { execFileSync, spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdirSync, readdirSync as readDir, statSync as stat, symlinkSync } from "node:fs";
+import { dirname, relative as relPath } from "node:path";
+
+const INSTALL = fileURLToPath(new URL("../../skills/bluesky-feature-pipeline/install.sh", import.meta.url));
+
+export type InstallRun = { status: number; output: string };
+
+// Every argument install.sh needs, in the form an adopter passes; a test overrides what it varies.
+export const INSTALL_ARGS = [
+  "--prefix", "skill",
+  "--source-globs", "src/**, lib/**/*.ts",
+  "--test-globs", "tests/**, **/*.test.ts",
+  "--trigger", "the public site: skills/*/SKILL.md",
+  "--trigger", "the invariants: CLAUDE.md",
+];
+
+const GH_STUB = `#!/usr/bin/env bash
+# Records each call as one tab-separated line; answers \`label list\` with the labels
+# \`label create\` has been given, one name per line as --jq '.[].name' prints them.
+printf '%s\\n' "$(IFS=$'\\t'; printf '%s' "$*")" >>"$GH_STUB_LOG"
+case "$1 $2" in
+  "label list") [ -f "$GH_STUB_LABELS" ] && cat "$GH_STUB_LABELS" ;;
+  "label create") printf '%s\\n' "$3" >>"$GH_STUB_LABELS" ;;
+esac
+exit 0
+`;
+
+export class AdoptingRepo {
+  readonly dir: string;
+  private readonly bin: string;
+  private readonly log: string;
+  private readonly labels: string;
+
+  constructor() {
+    this.dir = mkdtempSync(join(tmpdir(), "bluesky-install-"));
+    execFileSync("git", ["init", "-q", "-b", "main"], { cwd: this.dir });
+    this.bin = join(mkdtempSync(join(tmpdir(), "bluesky-gh-")), "bin");
+    mkdirSync(this.bin);
+    writeFileSync(join(this.bin, "gh"), GH_STUB);
+    chmodSync(join(this.bin, "gh"), 0o755);
+    this.log = join(dirname(this.bin), "calls.log");
+    this.labels = join(dirname(this.bin), "labels.txt");
+  }
+
+  // Runs install.sh from the repository root with the stub CLI first on PATH.
+  install(...args: string[]): InstallRun {
+    return this.run(`${this.bin}:${process.env.PATH ?? ""}`, args);
+  }
+
+  // The same with no `gh` anywhere on PATH, as a machine without the tracker CLI.
+  installWithoutGh(...args: string[]): InstallRun {
+    const noGh = join(dirname(this.bin), "no-gh");
+    mkdirSync(noGh, { recursive: true });
+    for (const tool of ["bash", "git", "sed", "find", "sort", "mkdir", "cp", "grep", "tr", "dirname", "mktemp", "rm"]) {
+      const real = execFileSync("sh", ["-c", `command -v ${tool}`], { encoding: "utf8" }).trim();
+      if (!existsSync(join(noGh, tool))) symlinkSync(real, join(noGh, tool));
+    }
+    return this.run(noGh, args);
+  }
+
+  private run(path: string, args: string[]): InstallRun {
+    const result = spawnSync("bash", [INSTALL, ...args], {
+      cwd: this.dir,
+      encoding: "utf8",
+      env: { PATH: path, GH_STUB_LOG: this.log, GH_STUB_LABELS: this.labels },
+    });
+    return { status: result.status ?? -1, output: result.stdout + result.stderr };
+  }
+
+  // The stub's record, one argv per call, oldest first.
+  ghCalls(): string[][] {
+    if (!existsSync(this.log)) return [];
+    return readFileSync(this.log, "utf8").split("\n").filter(Boolean).map((line) => line.split("\t"));
+  }
+
+  // Labels the tracker holds, as the stub sees them; seed it to play an adopter with labels already.
+  seedLabels(names: string[]): void {
+    writeFileSync(this.labels, names.map((n) => `${n}\n`).join(""));
+  }
+
+  write(files: Record<string, string>): void {
+    for (const [path, content] of Object.entries(files)) {
+      mkdirSync(dirname(join(this.dir, path)), { recursive: true });
+      writeFileSync(join(this.dir, path), content);
+    }
+  }
+
+  read(path: string): string {
+    return readFileSync(join(this.dir, path), "utf8");
+  }
+
+  exists(path: string): boolean {
+    return existsSync(join(this.dir, path));
+  }
+
+  // Every file in the repository outside .git with its content, so two runs can be compared whole.
+  snapshot(): Record<string, string> {
+    const files: Record<string, string> = {};
+    const walk = (dir: string) => {
+      for (const name of readDir(dir)) {
+        if (name === ".git") continue;
+        const path = join(dir, name);
+        if (stat(path).isDirectory()) walk(path);
+        else files[relPath(this.dir, path)] = readFileSync(path, "utf8");
+      }
+    };
+    walk(this.dir);
+    return files;
+  }
+}
