@@ -32,10 +32,10 @@ For each accepted output, in this order:
 
 1. **Name** it `NN-<surface>` — `NN` the number of the prompt that produced it, `<surface>` the surface's name from the prompt, so prompt, HTML, and PNG line up without a lookup. The Prompt 0 output is `00-<name>` (for example `00-shape.html`).
 2. **Store the export's HTML as-is** at `NN-<surface>.html`. The export's own palette, type, and layout are the record; a correction goes in the living docs, never here.
-3. **Keep the runtime once.** The export references a shared script — the tool's runtime, the file that makes the HTML interactive (for example `support.js`). Store one copy in the folder under one fixed name, the first time; later exports reuse it. Rewriting the HTML's reference to point at that one copy is the **only edit ever made to an export**, and it is made at pin time or not at all.
+3. **Keep the runtime once.** The export references a shared script — the tool's runtime, the file that makes the HTML interactive (for example `support.js`). The first pin stores one copy in the folder under the name the export gives it; every later export reuses that copy and that name, and the folder never holds a second. Rewriting the HTML's reference to point at that one copy is the **only edit ever made to an export**, and it is made at pin time or not at all.
 4. **Capture the PNG** with [`capture.mjs`](capture.mjs): `node capture.mjs NN-<surface>.html`, run from inside the project. It renders the export in headless Chromium at the width the export declares (1528 px when it declares none) and writes `NN-<surface>.png` beside it, full length. The script needs the `playwright` package in the project; its header names the install command.
 5. **Index it.** Add one line to the README's entry for the folder, stating three things: the surface, the prompt number, and what the PNG cannot show — states behind tabs, content below the app frame's fold, anything the export shows only on interaction. The reader of the README decides from that line whether to open the HTML.
 
-Done when the folder holds the HTML, its PNG, and one runtime, the README has the line, and `git diff` on the export shows nothing but the runtime reference.
+Done when the folder holds the HTML, its PNG, and one runtime, the README has the line, and a diff of the stored HTML against the file as downloaded shows nothing but the runtime reference.
 
 Origin: Vitrine's `docs/reference/design-prompts.md` and its § Running these; `docs/reference/prototypes/` and the `prototypes/` line of `docs/reference/README.md`.

@@ -54,18 +54,32 @@ function parseArgs(argv) {
 }
 
 // The export declares its canvas as `{"$preview":{"width":N,…}}` in the `data-props` of its
-// runtime script tag, HTML-entity-encoded. Read it by regular expression rather than by
-// parsing the document: the export is not edited and the shape is the tool's, not ours.
+// runtime script tag, HTML-entity-encoded JSON. Parse it as JSON rather than pattern-match
+// it, so a key the tool adds beside `width` cannot hide the declaration; `data-props` that
+// is not JSON is an error, not a default, because the declaration may be in there.
 function declaredWidth(html) {
   const props = /<script[^>]*\sdata-props="([^"]*)"/.exec(html);
   if (!props) return undefined;
-  const json = props[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&");
-  const preview = /"\$preview"\s*:\s*\{[^}]*"width"\s*:\s*("[^"]*"|[^,}\s]+)/.exec(json);
-  if (!preview) return undefined;
-  const raw = preview[1];
-  const value = raw.startsWith('"') ? raw.slice(1, -1) : raw;
-  if (!/^[1-9]\d*$/.test(value)) return new Error(`declared width is not a positive integer: ${value}`);
-  return Number(value);
+  let parsed;
+  try {
+    parsed = JSON.parse(decodeEntities(props[1]));
+  } catch {
+    return new Error("data-props is not JSON");
+  }
+  const value = parsed?.$preview?.width;
+  if (value === undefined) return undefined;
+  if (!Number.isInteger(value) || value <= 0) return new Error(`declared width is not a positive integer: ${JSON.stringify(value)}`);
+  return value;
+}
+
+// The five named entities an attribute value can carry, plus numeric ones; enough for JSON.
+function decodeEntities(text) {
+  const named = { quot: '"', amp: "&", lt: "<", gt: ">", apos: "'" };
+  return text.replace(/&(#x[0-9a-f]+|#\d+|quot|amp|lt|gt|apos);/gi, (whole, entity) => {
+    if (entity[0] !== "#") return named[entity.toLowerCase()];
+    const code = entity[1].toLowerCase() === "x" ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+    return String.fromCodePoint(code);
+  });
 }
 
 // The pinning agent's project owns Playwright, not the skill: look beside the caller first,

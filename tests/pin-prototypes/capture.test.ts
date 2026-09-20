@@ -60,6 +60,17 @@ describe("capture.mjs — a full-page PNG beside the export", () => {
   );
 
   test(
+    "a declared width is found whatever else $preview carries, however the quotes are encoded",
+    () => {
+      const html = exportHtml(TALL, { $preview: { viewport: { w: 1 }, width: 1100 } }).replace(/&quot;/g, "&#34;");
+      const f = fixture("07-nested", html);
+      expect(capture(f.dir, "07-nested.html")).toMatchObject({ status: 0 });
+      expect(pngSize(f.pngPath).width).toBe(1100);
+    },
+    LAUNCH_TIMEOUT,
+  );
+
+  test(
     "an export that declares no width is captured at 1528 px",
     () => {
       const f = fixture("01-inbox", exportHtml(TALL));
@@ -99,6 +110,13 @@ describe("capture.mjs — failures", () => {
     expect(run.status).toBe(1);
     expect(run.output).toContain("wide");
     expect(existsSync(f.pngPath)).toBe(false);
+  });
+
+  test("data-props that is not JSON fails rather than defaulting", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pin-prototypes-"));
+    writeFileSync(join(dir, "06-bad.html"), `<html><body>${TALL}<script data-dc-script data-props="{not json"></script></body></html>`);
+    expect(capture(dir, "06-bad.html")).toMatchObject({ status: 1 });
+    expect(existsSync(join(dir, "06-bad.png"))).toBe(false);
   });
 
   test("a --width that is not a positive integer fails", () => {
