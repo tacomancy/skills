@@ -355,6 +355,10 @@ export class AdoptingRepo {
     return readFileSync(join(this.dir, path), "utf8");
   }
 
+  chmod(path: string, mode: number): void {
+    chmodSync(join(this.dir, path), mode);
+  }
+
   exists(path: string): boolean {
     return existsSync(join(this.dir, path));
   }

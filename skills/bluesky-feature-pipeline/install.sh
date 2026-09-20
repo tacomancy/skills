@@ -67,7 +67,8 @@ target_of() { printf '.github/%s\n' "${1#"$templates"/}"; }
 
 # The rendered set is built whole in a scratch directory and compared before anything
 # reaches the repository. A target is this script's own output when it is byte-identical
-# to what this run renders; anything else at that path is refused, whoever wrote it.
+# to what this run renders; anything else at that path is refused, whoever wrote it. Only
+# content counts: an executable bit set on an installed script is the adopter's to set.
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 escape() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; }
@@ -84,7 +85,7 @@ while IFS= read -r file; do
   target="$(target_of "$file")"
   mkdir -p "$scratch/$(dirname "$target")"
   render "$file" >"$scratch/$target"
-  if [ -e "$target" ] && ! git diff --no-index --quiet "$target" "$scratch/$target"; then
+  if [ -e "$target" ] && [ "$(git hash-object "$target")" != "$(git hash-object "$scratch/$target")" ]; then
     say "refused: $target exists and is not this script's output; ADOPTING.md states the merge path" >&2
     refused=1
   fi
@@ -108,7 +109,7 @@ done < <(template_files)
 # The list limit is well above any label set; the CLI's default page would hide labels.
 existing="$(gh label list --limit 1000 --json name --jq '.[].name')"
 label() {
-  if printf '%s\n' "$existing" | grep -qxF "$1"; then
+  if grep -qxF "$1" <<<"$existing"; then
     say "found: label $1"
   else
     gh label create "$1" --color "$2" --description "$3" >/dev/null

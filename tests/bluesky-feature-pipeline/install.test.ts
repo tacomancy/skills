@@ -68,6 +68,16 @@ describe("install.sh over its own output", () => {
   });
 });
 
+describe("install.sh over its own output", () => {
+  test("an executable bit the adopter set on an installed script is not a foreign file", () => {
+    const repo = new AdoptingRepo();
+    expect(repo.install(...INSTALL_ARGS).status).toBe(0);
+    repo.chmod(".github/workflows/scripts/ticket-link-check.mjs", 0o755);
+    const again = repo.install(...INSTALL_ARGS);
+    expect(again.status, again.output).toBe(0);
+  });
+});
+
 describe("install.sh against a repository with history", () => {
   const foreign = "name: CI\non: [push]\njobs: {}\n";
 
