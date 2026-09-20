@@ -1,0 +1,245 @@
+{
+  "skill_name": "bluesky-feature-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "stage-0-collision-sends-the-adopter-to-the-adoption-path",
+      "prompt": "Set this repository up for the pipeline.",
+      "fixture": "fixtures/repository/CLAUDE.md with fixtures/repository/history.md: a repository with its own PR template, CI workflow, labels, and tickets in flight; the script answers as § Script answers says",
+      "expected_output": "The session names stage 0 and its end — the checklist done, no feature work. It runs install.sh with the family prefix `feature`, reads the exit naming .github/pull_request_template.md, leaves that file alone, and turns to ADOPTING.md for the merge of that template, the mapping of the existing labels (`feature/<name>` is already the family; `ready` is the unclaimed state; `spec` already marks beats), and the reading of #7's tickets as already in the one shape, with #7 itself given `spec:tickets-generated` for where it stands. BRANCH_PROTECTION.md is the remainder, with the three check names added beside `test`.",
+      "assertions": [
+        "the response names stage 0 and states that its authority ends at the checklist, before any feature work",
+        "the colliding file is left untouched and the session turns to ADOPTING.md rather than overwriting or hand-editing around the script",
+        "the existing labels are mapped — `feature/<name>` as the family, `spec` on beats, `ready` as the unclaimed state — rather than duplicated",
+        "#7's tickets are read as already in the one shape and left as they are; #7 itself gains only the status label for where it stands, `spec:tickets-generated`",
+        "branch protection is the stated remainder from BRANCH_PROTECTION.md — the three check names added beside `test` — not something the script is expected to do"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "stage-1-operating-picture-with-its-skills",
+      "prompt": "Start the operating picture for acme/reader.",
+      "fixture": "fixtures/repository/CLAUDE-before-stage-1.md, with the owner answering as its § Owner's answers says, and fixtures/repository/skills-full.md",
+      "expected_output": "The session names stage 1 — vocabulary and the guidance scaffold, ending when both are written, no feature decided — and does the work through `guidance-tiers` for the two tiers and `grill-with-docs` for the vocabulary.",
+      "assertions": [
+        "the response names stage 1 and says its authority ends with the scaffold written and the vocabulary agreed, with no feature decided",
+        "`guidance-tiers` is named as doing the scaffold and the grill skill as writing the vocabulary while it asks",
+        "nothing about the reading-goals feature is decided or drafted"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "stage-1-operating-picture-without-its-skills-gives-the-fallback",
+      "prompt": "Start the operating picture for acme/reader.",
+      "fixture": "fixtures/repository/CLAUDE-before-stage-1.md, with the owner answering as its § Owner's answers says, and fixtures/repository/skills-partial.md",
+      "expected_output": "The same stage and boundary; with no `guidance-tiers` and no grill skill, the session scaffolds the frozen and living tiers by hand with the precedence rule in the guidance file, and runs a plain question round, writing the vocabulary from the answers.",
+      "assertions": [
+        "the response names stage 1 and its boundary",
+        "the fallback is given — two tiers scaffolded by hand with the precedence rule, a plain grill round — rather than stopping for the missing skills",
+        "the missing skills are named as absent, with what is done instead"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "stage-2-brief-with-its-skills",
+      "prompt": "Grill this idea into a brief: a reader sets a yearly reading goal and sees progress on the library surface.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md",
+      "expected_output": "The session names stage 2 — a brief with a Changelog section from the first draft, ending when every branch is resolved or listed as open, nothing prototyped — grills with `grill-me`, and closes the round with `reversibility-rank` so the sticky decisions are marked.",
+      "assertions": [
+        "the response names stage 2 and says its authority ends when every decision branch is resolved or listed open, with nothing prototyped",
+        "the brief carries a Changelog section from its first draft, empty",
+        "`grill-me` does the grilling and `reversibility-rank` closes the round"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "stage-2-brief-without-its-skills-gives-the-fallback",
+      "prompt": "Grill this idea into a brief: a reader sets a yearly reading goal and sees progress on the library surface.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md",
+      "expected_output": "The same stage and boundary; with no grill skill and no `reversibility-rank`, the session interviews by hand one branch at a time until none is open, and ends by listing which decisions would be hard to reverse.",
+      "assertions": [
+        "the response names stage 2 and its boundary",
+        "the interview proceeds by hand, one branch at a time, until no branch is open",
+        "the brief carries an empty Changelog section and a list of the decisions that would be hard to reverse, written without the skill"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "stage-3-prototype-with-its-skills",
+      "prompt": "The brief is ready. Get me what I need to run the design tool.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/brief/brief.md as docs/reference/brief.md",
+      "expected_output": "The session names stage 3 — a prompt set from the brief, accepted outputs pinned into a frozen folder, ending with the outputs pinned; the brief is not edited — and hands the drafting and pinning to `pin-prototypes`.",
+      "assertions": [
+        "the response names stage 3 and says its authority ends with the outputs pinned, with the brief unedited",
+        "`pin-prototypes` is named as doing the prompt set and the pinning",
+        "the human is named as the one who runs the design tool, and several rounds are called still stage 3"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "stage-3-prototype-without-its-skills-gives-the-fallback",
+      "prompt": "The brief is ready. Get me what I need to run the design tool.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md, with fixtures/brief/brief.md as docs/reference/brief.md",
+      "expected_output": "The same stage and boundary; with no `pin-prototypes`, the session drafts one prompt per surface from the brief — the library surface and the goal editor — and says to keep every accepted export in a frozen folder numbered to its prompt.",
+      "assertions": [
+        "the response names stage 3 and its boundary",
+        "one prompt per surface is drafted from the brief rather than the session stopping",
+        "accepted exports go to a frozen folder, numbered to their prompt, and the brief is not edited"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "stage-5-beats-with-its-skills",
+      "prompt": "Round 2 was a go. Plan the beats.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/brief/brief.md carrying a 2026-08-04 changelog entry for the ring and fixtures/prototype/pinned.md as the pinned folder",
+      "expected_output": "The session names stage 5 — port the prototype, identify the beats, open one stub per beat carrying the family label, `spec`, and `spec:needs-grilling`, write the handoff, ending at stubs opened and labelled — with `wayfinder` for the beats, `to-spec` for each stub, `handoff` for the document; two stubs, goal storage and editor before the ring; then reads the guidance file's changelog section and opens the roadmap issue in acme/site for the stubs it opened.",
+      "assertions": [
+        "the response names stage 5 and says its authority ends at stubs opened and labelled, with no stub fleshed out",
+        "`wayfinder`, `to-spec`, and `handoff` are named for the beats, the stubs, and the handoff document",
+        "each stub carries the family label, `spec`, and `spec:needs-grilling`",
+        "the guidance file's changelog section is read at the end and the roadmap trigger is acted on for the stubs opened, though no diff exists"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "stage-5-beats-without-its-skills-gives-the-fallback",
+      "prompt": "Round 2 was a go. Plan the beats.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md, with fixtures/brief/brief.md carrying a 2026-08-04 changelog entry for the ring and fixtures/prototype/pinned.md as the pinned folder",
+      "expected_output": "The same stage and boundary; with no beat-planning, `to-spec`, or handoff skill, the session lists the beats by hand, opens each stub from the stub template, writes the handoff as a file in the repository, and still ends by reading the guidance file's changelog section.",
+      "assertions": [
+        "the response names stage 5 and its boundary",
+        "the beats are listed by hand, the stubs opened from the stub template, and the handoff written as a repository file",
+        "no stub is fleshed out into a spec",
+        "the guidance file's post-merge section is read and its roadmap trigger acted on for the stubs"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "stage-6-spec-with-its-skills",
+      "prompt": "Take beat #18 from stub to tickets.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/beat/beat-issues.md; #18 is the stub at `spec:needs-grilling`",
+      "expected_output": "The session names stage 6 — one beat, the spec grilled from the stub, tickets in the one shape, labels moved at each step, ending at the tickets opened and from then on at deciding — grills #18 to ready with `grill-me`, moves the label to `spec:ready-for-tickets`, opens tickets with `to-tickets` each carrying `## Parent` #18 and `feature/reading-goals`, moves to `spec:tickets-generated`, and reads the guidance file's changelog section for the tickets opened.",
+      "assertions": [
+        "the response names stage 6 and says its authority ends at the tickets opened and then at deciding, implementing nothing",
+        "the beat's label moves `spec:needs-grilling` → `spec:ready-for-tickets` → `spec:tickets-generated` at the stated steps, by this session",
+        "`to-tickets` opens the tickets, each with `## Parent` naming #18 and the family label",
+        "#20 and its tickets are not touched: one beat, nothing else"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "stage-6-spec-without-its-skills-gives-the-fallback",
+      "prompt": "Take beat #18 from stub to tickets.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md, with fixtures/beat/beat-issues.md; #18 is the stub at `spec:needs-grilling`",
+      "expected_output": "The same stage and boundary; with no grill skill and no `to-tickets`, the session interviews by hand and opens each ticket from the ticket template — `## Parent`, `## What to build`, `## Acceptance criteria`, `## Blocked by`, the family label — moving the beat's labels itself at each step.",
+      "assertions": [
+        "the response names stage 6 and its boundary",
+        "the tickets are opened from the ticket template in the one shape, with `## Parent` naming #18 and the family label",
+        "the beat's labels move at each step by this session",
+        "no ticket is implemented and #20 is not touched"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "stage-7-ticket-with-its-skills",
+      "prompt": "Implement ticket #22.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/beat/beat-issues.md before PR #25 exists; src/model/goals.ts exists with goals.forYear",
+      "expected_output": "The session names stage 7 — one ticket, its own branch and worktree, a reviewed green open PR, ending at the PR open with no merge — builds with `implement` driving `tdd` at the seams, runs `code-review` before the PR opens and again if the branch moves, opens a PR whose body starts `Closes #22` and carries the review's findings and declined items, and stops; a red CI after the obvious fix goes to `diagnosing-bugs`.",
+      "assertions": [
+        "the response names stage 7 and says its authority ends at the PR open — reviewed, green, stopped — with no merge and no other ticket's branch",
+        "`implement`, `tdd`, and `code-review` are named, with the review run before the PR opens and again if the branch moves",
+        "the PR body names the ticket by a closing keyword and carries the review's findings and declined items",
+        "the session stops at the open PR; landing is not this session's"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "stage-7-ticket-without-its-skills-gives-the-fallback",
+      "prompt": "Implement ticket #22.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md, with fixtures/beat/beat-issues.md before PR #25 exists; src/model/goals.ts exists with goals.forYear",
+      "expected_output": "The same stage and boundary; with no `implement`, `tdd`, `code-review`, or diagnosing skill, the session red-green-refactors by hand, reviews the diff itself and writes the findings into the PR body, and on a red CI reproduces, minimises, and hypothesises before fixing.",
+      "assertions": [
+        "the response names stage 7 and its boundary",
+        "red-green-refactor by hand replaces `implement` and `tdd`, rather than the session stopping",
+        "the PR body still opens with `Closes #22` and carries a review section",
+        "a red CI is met with reproduce, minimise, hypothesise rather than retrying until green"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "stage-8-land-with-its-skills",
+      "prompt": "Land PR #25.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/beat/beat-issues.md as the tracker's state",
+      "expected_output": "The session names stage 8 — one PR per run, the merge, #22 closed naming #25, the beat left open since #23 is still open, the guidance file's changelog triggers taken against the diff (the library surface changed, so acme/site is checked), #23 named as unblocked — and hands the run to `land-ticket`.",
+      "assertions": [
+        "the response names stage 8 and says its authority ends at one PR per run",
+        "`land-ticket` is named as doing the landing",
+        "#20 stays open because #23 is open; #23 is named as what the merge unblocked",
+        "the `ticket:landed` label is left to the lifecycle workflow, and issue state to this stage"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "stage-8-land-without-its-skills-gives-the-fallback",
+      "prompt": "Land PR #25.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md, with fixtures/beat/beat-issues.md as the tracker's state",
+      "expected_output": "The same stage and boundary; with no `land-ticket`, the session merges in the history's style, closes #22 with a comment naming #25, leaves #20 open with #23 remaining, reads the guidance file's changelog section and takes the surface trigger against the diff by hand — an issue in acme/site, or the existing one linked — and lists #23 as unblocked.",
+      "assertions": [
+        "the response names stage 8 and its boundary",
+        "the manual sequence is followed in full — merge, close #22 naming #25, beat left open, post-merge section read against the diff, unblocked ticket listed — rather than the session stopping",
+        "the surface trigger fires on the library-surface change and is acted on toward acme/site",
+        "the workflows' labels are not moved by hand"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "stage-4-gate-sizes-the-gap-and-leaves-go-or-no-go-to-the-human",
+      "prompt": "Round 2 is pinned. Reconcile it against the brief.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/brief/brief.md as docs/reference/brief.md and fixtures/prototype/pinned.md as the pinned folder",
+      "expected_output": "The session names stage 4 — a gate never skipped, one short session, ending at the changelog entry and the human's decision — grills only the branches the prototype touched (decisions 1 and 2; the brief's open question, which the prototype left untouched, stays open), drafts the dated Changelog entry on the brief naming the ring for the line and books-by-default, sizes the gap, and asks the human for go or no-go rather than deciding; a no-go returns to stage 3.",
+      "assertions": [
+        "the response names stage 4 and says its authority ends at the changelog entry and the decision",
+        "the grill is scoped to decisions 1 and 2, with decisions 3 and 4 and the brief's open question left alone",
+        "a dated entry is written to the brief's Changelog naming what the prototype changed and why, and the brief's decisions are not edited in place",
+        "go or no-go is handed to the human, with a no-go named as another stage 3 round"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "stage-6-fresh-session-resumes-the-beat-from-its-issues",
+      "prompt": "Pick up beat #20. What stage am I in and what may I decide?",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/beat/beat-issues.md § Variant — resume: the previous spec session is closed and there is no handoff",
+      "expected_output": "The session reads #20, its comments, its tickets and their labels, and PR #25, and says it is the beat's stage 6 spec session at the monitoring end: the spec is ready and its tickets are generated, #21 landed, #22 is in review with PR #25 green, #23 waits on #22. It may decide flags and order landings under #20; it implements nothing and touches #18 only if asked to become that beat's session.",
+      "assertions": [
+        "the beat's state is read from its issues, comments, and labels alone, and the absence of a handoff is not treated as a blocker",
+        "the response names stage 6 and the beat's position: `spec:tickets-generated`, #21 landed, #22 in review, #23 blocked on #22",
+        "what the session may decide is stated — answer flags, order landings — and what it may not: implement, or act for #18 unasked",
+        "the next action named is a stage 8 landing of PR #25 for the beat, or waiting on it"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "stage-7-wrong-spec-is-flagged-and-the-session-stops",
+      "prompt": "Implement ticket #22.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/beat/beat-issues.md § Variant — wrong spec: src/model/goals.ts does not exist and #18 has no tickets",
+      "expected_output": "Before writing code, the session finds that the third acceptance criterion depends on a model #18 has not yet produced, comments once on #20 saying what does not hold, puts `ticket:blocked` on #22, and stops. It does not write the goal model inside #22, does not reinterpret the criterion, and does not decide the fix.",
+      "assertions": [
+        "the gap is stated as the spec's, on the beat's issue #20, in one comment saying what does not hold",
+        "`ticket:blocked` is set on #22 by this session",
+        "the session stops after flagging: no goal model is written, no criterion is reinterpreted, no PR opens",
+        "the decision is left to the spec session"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "out-of-scope-work-is-named-as-a-separate-pipeline",
+      "prompt": "Run the pipeline on this: migrate our payments service from REST to gRPC, with the platform team's sign-off gates and the quarterly release train.",
+      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md",
+      "expected_output": "The session says this is traditional-SDLC work against an established codebase, a separate pipeline out of this skill's scope, and stops rather than mapping the migration onto the eight stages.",
+      "assertions": [
+        "the response says the work is out of this skill's scope and names it as a separate pipeline",
+        "the migration is not forced through the stages"
+      ]
+    }
+  ]
+}

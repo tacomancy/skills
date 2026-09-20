@@ -63,7 +63,7 @@ Each stage ends where the next one can check it started right: a brief with its 
 
 ## 5. Beats
 
-- [ ] Port the reconciled prototype into the repository.
+- [ ] Port the reconciled prototype into the repository — this session's own work, from the pinned folder under the precedence rule.
 - [ ] Identify the implementation beats — a beat-planning skill, `wayfinder` as an example.
 - [ ] Open one stub issue per beat — `to-spec`, as an example, or the stub template — carrying the family label, the `spec` label, and `spec:needs-grilling`.
 - [ ] When compaction nears, write the handoff document — `handoff`, as an example — rather than rely on auto-compaction.
@@ -91,8 +91,8 @@ Each stage ends where the next one can check it started right: a brief with its 
 
 - [ ] Create the branch and worktree; open the session there with the ticket's number and nothing else.
 - [ ] Implement — `implement`, as an example — driving `tdd` for every seam.
-- [ ] Run `code-review` before the PR opens, and again if the branch moves after.
-- [ ] Open the PR with a closing keyword naming the ticket and the review in the body: its findings, and each item declined with why.
+- [ ] Run `code-review` before the PR opens, and again if the branch moves after; without it, read the diff as a reviewer would and write what you find into the review section.
+- [ ] Open the PR with a closing keyword naming the ticket and the review in the body: its findings, and each item declined with why. Where the guidance file's post-merge section obliges an issue for this diff, link it in the body on a line naming the trigger.
 - [ ] When CI stays red after the obvious fix, diagnose — `diagnosing-bugs`, as an example: reproduce, minimise, hypothesise — rather than retry until green.
 - [ ] Ends with: a reviewed, green PR, open. The session stops there.
 

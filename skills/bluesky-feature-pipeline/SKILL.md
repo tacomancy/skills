@@ -78,7 +78,7 @@ A gate, never skipped: it keeps the brief authoritative instead of stale.
 - **Starts from**: the amended brief and the pinned prototype.
 - **Produces**: the prototype ported into the repository; the implementation beats; one **stub** issue per beat, each carrying the family label, the `spec` label, and `spec:needs-grilling`; the handoff document.
 - **Authority ends** at stubs opened and labelled. No stub is fleshed out here — that is the spec session's work, held to one beat at a time.
-- **Skill**: a beat-planning skill to identify the beats — `wayfinder`, as an example; `to-spec` to open each stub; a handoff skill for the document — `handoff`, as an example.
+- **Skill**: the port is this session's own work, from the pinned folder under the precedence rule between brief and prototype; a beat-planning skill to identify the beats — `wayfinder`, as an example; `to-spec` to open each stub; a handoff skill for the document — `handoff`, as an example.
 - **Without it**: list the beats by hand; open each stub from the stub template; write the handoff as a file in the repository.
 
 Then, before the session ends, read the guidance file's post-merge section — the obligations a landing takes against a diff — and do what it obliges for the stubs just opened: some of what it names moves on an event with no diff, and this is one.
@@ -100,10 +100,10 @@ On a flag — a comment on the beat's issue and `ticket:blocked` on the ticket �
 
 - **Owner**: one session per ticket, on its own branch and worktree, so it can neither see nor touch another ticket's work.
 - **Starts from**: one ticket only.
-- **Produces**: an open PR whose body names the ticket by a closing keyword and carries the review — its findings, and each item declined with why.
+- **Produces**: an open PR whose body names the ticket by a closing keyword and carries the review — its findings, and each item declined with why — and, where the guidance file's post-merge section obliges an issue for this diff, the line linking it, so the obligation is met by the session that made the change rather than discovered at landing.
 - **Authority ends** at the PR open: reviewed, green, and stopped. No merge, no landing, no other ticket's branch.
 - **Skill**: `implement`, driving `tdd` for every seam; `code-review` before the PR opens and again if the branch moves after; a diagnosing skill when CI stays red after the obvious fix — `diagnosing-bugs`, as an example — so the fix is reasoned rather than retried until green.
-- **Without it**: red-green-refactor by hand; on a red CI, reproduce, minimise, and hypothesise before fixing.
+- **Without it**: red-green-refactor by hand; read the diff as a reviewer would and write what you find into the PR body's review section; on a red CI, reproduce, minimise, and hypothesise before fixing.
 
 A spec that turns out wrong is **flagged**, never built around: one comment on the beat's issue saying what does not hold, `ticket:blocked` on the ticket, then stop. The spec session decides.
 
@@ -137,3 +137,5 @@ Two, each with a mechanism, so neither is silent:
 ## Resumability
 
 A beat's state is its issues and labels: the stub's body and comments, its tickets, their labels, their PRs. A new session becomes the beat's spec session by reading those and nothing else, and a closed or compacted session takes nothing with it that the beat needs. The rule for every stage: state that would live only in a session is written to the tracker or the repository before the session ends.
+
+Origin: the sequence of sessions Vitrine's features ran through — one grilling the idea into a brief, one drafting the design-tool prompts, one reconciling the brief against what came back, one planning the beats, one per beat writing the spec and its tickets, one per ticket implementing — and `tacomancy/skills`' own loop in its `CLAUDE.md` § Specs and loop, with the boundaries learned when a session overstepped: a ticket session that reinterpreted its spec, a spec session compacted with the beat's state in it, a merge that rode on a self-posted status its rebase had orphaned.
