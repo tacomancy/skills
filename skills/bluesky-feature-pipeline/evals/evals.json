@@ -12,14 +12,14 @@
         "the colliding file is left untouched and the session turns to ADOPTING.md rather than overwriting or hand-editing around the script",
         "the existing labels are mapped — `feature/<name>` as the family, `spec` on beats, `ready` as the unclaimed state — rather than duplicated",
         "#7 and its children are read as already in the one shape, so nothing is done to them",
-        "branch protection is the stated remainder from BRANCH_PROTECTION.md, not something the script is expected to do"
+        "branch protection is the stated remainder from BRANCH_PROTECTION.md — the three check names added beside `test` — not something the script is expected to do"
       ]
     },
     {
       "id": 2,
       "name": "stage-1-operating-picture-with-its-skills",
       "prompt": "Start the operating picture for acme/reader.",
-      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md",
+      "fixture": "fixtures/repository/CLAUDE-before-stage-1.md, with the owner answering as its § Owner's answers says, and fixtures/repository/skills-full.md",
       "expected_output": "The session names stage 1 — vocabulary and the guidance scaffold, ending when both are written, no feature decided — and does the work through `guidance-tiers` for the two tiers and `grill-with-docs` for the vocabulary.",
       "assertions": [
         "the response names stage 1 and says its authority ends with the scaffold written and the vocabulary agreed, with no feature decided",
@@ -31,7 +31,7 @@
       "id": 3,
       "name": "stage-1-operating-picture-without-its-skills-gives-the-fallback",
       "prompt": "Start the operating picture for acme/reader.",
-      "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-partial.md",
+      "fixture": "fixtures/repository/CLAUDE-before-stage-1.md, with the owner answering as its § Owner's answers says, and fixtures/repository/skills-partial.md",
       "expected_output": "The same stage and boundary; with no `guidance-tiers` and no grill skill, the session scaffolds the frozen and living tiers by hand with the precedence rule in the guidance file, and runs a plain question round, writing the vocabulary from the answers.",
       "assertions": [
         "the response names stage 1 and its boundary",
@@ -196,10 +196,10 @@
       "name": "stage-4-gate-sizes-the-gap-and-leaves-go-or-no-go-to-the-human",
       "prompt": "Round 2 is pinned. Reconcile it against the brief.",
       "fixture": "fixtures/repository/CLAUDE.md and fixtures/repository/skills-full.md, with fixtures/brief/brief.md as docs/reference/brief.md and fixtures/prototype/pinned.md as the pinned folder",
-      "expected_output": "The session names stage 4 — a gate never skipped, one short session, ending at the changelog entry and the human's decision — grills only the branches the prototype touched (decisions 1 and 2, and the open question it answered), drafts the dated Changelog entry on the brief naming the ring for the line and books-by-default, sizes the gap, and asks the human for go or no-go rather than deciding; a no-go returns to stage 3.",
+      "expected_output": "The session names stage 4 — a gate never skipped, one short session, ending at the changelog entry and the human's decision — grills only the branches the prototype touched (decisions 1 and 2; the brief's open question, which the prototype left untouched, stays open), drafts the dated Changelog entry on the brief naming the ring for the line and books-by-default, sizes the gap, and asks the human for go or no-go rather than deciding; a no-go returns to stage 3.",
       "assertions": [
         "the response names stage 4 and says its authority ends at the changelog entry and the decision",
-        "the grill is scoped to decisions 1 and 2 and the open question, with decisions 3 and 4 left alone",
+        "the grill is scoped to decisions 1 and 2, with decisions 3 and 4 and the brief's open question left alone",
         "a dated entry is written to the brief's Changelog naming what the prototype changed and why, and the brief's decisions are not edited in place",
         "go or no-go is handed to the human, with a no-go named as another stage 3 round"
       ]
