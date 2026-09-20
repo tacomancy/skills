@@ -25,3 +25,4 @@ No force pushes to `main`, no deleting it.
 - Evaluation fixtures for a skill's prose live beside the skill, in its folder, because they document what the skill is for.
 - The root `README.md` lists every skill in one line; adding a skill adds a line.
 - Vendored third-party skills sit in `.agents/skills/` and are never edited here.
+- The public page for this repository, `tacomancy.com/skills/`, lives in `tacomancy/tacomancy`. Nothing site-related is committed here; a PR that changes what the page should say opens an issue there — `CLAUDE.md` § The public site names the triggers.
