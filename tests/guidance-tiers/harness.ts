@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const INSTALLED = "scripts/check-guidance.sh";
 const SCRIPT = fileURLToPath(new URL("../../skills/guidance-tiers/check-guidance.sh", import.meta.url));
+const SCAFFOLD = fileURLToPath(new URL("../../skills/guidance-tiers/scaffold.sh", import.meta.url));
 
 // `output` is stdout and stderr together, as a CI log shows them.
 export type Run = { status: number; output: string; lines: string[]; fails: string[] };
@@ -66,15 +67,31 @@ export class FixtureRepo {
     this.write({ [INSTALLED]: script });
   }
 
+  read(path: string): string {
+    return readFileSync(join(this.dir, path), "utf8");
+  }
+
+  exists(path: string): boolean {
+    return existsSync(join(this.dir, path));
+  }
+
+  // The scaffold step of the skill, run from the repository root with the interview's answers.
+  scaffold(...args: string[]): Run {
+    return collect(spawnSync("bash", [SCAFFOLD, ...args], { cwd: this.dir, encoding: "utf8" }));
+  }
+
   // Runs the installed copy when `installScript` made one, else the skill's own script.
   run(...args: string[]): Run {
     const installed = join(this.dir, INSTALLED);
     const script = existsSync(installed) ? installed : SCRIPT;
-    const result = spawnSync("bash", [script, ...args], { cwd: this.dir, encoding: "utf8" });
-    const output = result.stdout + result.stderr;
-    const lines = output.split("\n").filter((line) => line !== "");
-    return { status: result.status ?? -1, output, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
+    return collect(spawnSync("bash", [script, ...args], { cwd: this.dir, encoding: "utf8" }));
   }
+}
+
+function collect(result: SpawnSyncReturns<string>): Run {
+  const output = result.stdout + result.stderr;
+  const lines = output.split("\n").filter((line) => line !== "");
+  return { status: result.status ?? -1, output, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
 }
 
 // The default layout the script's configuration block names, with one frozen file.
