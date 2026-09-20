@@ -52,6 +52,46 @@
         "the closing comment on #7 lists all three PRs: #10, #12, #14",
         "the report states the parent's state as closed with the PR list"
       ]
+    },
+    {
+      "id": 5,
+      "name": "fired-trigger-is-acted-on-with-the-pr-named",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set through the merge and close, then fixtures/guidance-with-triggers with the target answering as its § Target answers — No issue yet says",
+      "expected_output": "The guidance file's § The public changelog is read as the post-merge section and its three triggers taken against PR #12's diff: the shelf-order trigger fires on src/shelves/finished/shelf.ts, the other two did not. The target is searched first and returns nothing, so an issue is opened in acme/site naming acme/reader#12 and what the page should now say. The report marks the first trigger fired-and-done with acme/site#31, and the other two did-not-fire.",
+      "assertions": [
+        "the post-merge section is found by reading the guidance file, and each of its three triggers is taken against the diff",
+        "the shelf-order trigger is marked fired, and the shelf-added and shortcut triggers are marked did-not-fire",
+        "the target is searched for an open issue before one is opened",
+        "the issue opened names PR #12 and what the page should now say",
+        "the report names every trigger's state, fired ones with their issue"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "no-post-merge-section-is-reported-and-costs-nothing-further",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set through the merge and close, then fixtures/guidance-without-triggers",
+      "expected_output": "The guidance file is read, no section stating what must happen when a change lands is found, and the step ends with the report saying \"no post-merge section\"; the diff is not taken against anything, no target is searched, and no issue is opened.",
+      "assertions": [
+        "the guidance file is read and the absence of a post-merge section is stated",
+        "the report's trigger line reads no post-merge section",
+        "no issue is opened and no target is searched",
+        "the step moves straight on to the frontier"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "existing-open-issue-is-linked-not-duplicated",
+      "prompt": "Land PR #12.",
+      "fixture": "fixtures/ticket-set through the merge and close, then fixtures/guidance-with-triggers with the target answering as its § Target answers — Existing issue says: the search returns acme/site#29, open, naming acme/reader#10 and not #12",
+      "expected_output": "The shelf-order trigger fires; the search of acme/site finds #29 open for the same change, so no second issue is opened. #29 is linked in the report as fired-and-already-covered, and one comment is added there naming acme/reader#12 since the issue did not name it yet.",
+      "assertions": [
+        "the target is searched before any issue is opened",
+        "acme/site#29 is recognised as covering the fired trigger and no new issue is created",
+        "a comment naming PR #12 is added to #29 because its body names only #10",
+        "the report marks the trigger fired-and-already-covered with #29 linked, and the other two did-not-fire"
+      ]
     }
   ]
 }
