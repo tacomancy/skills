@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const SCRIPT = fileURLToPath(new URL("../../skills/guidance-tiers/check-guidance.sh", import.meta.url));
 
 // `output` is stdout and stderr together, as a CI log shows them.
+const INSTALLED = "scripts/check-guidance.sh";
+
 export type Run = { status: number; output: string; lines: string[]; fails: string[] };
 
 // A throwaway git repository with a `main` branch, driven the way an owner's CI would
@@ -51,8 +53,22 @@ export class FixtureRepo {
     this.git("checkout", "-q", "-b", name);
   }
 
+  // Copies the script into the repository with configuration lines rewritten, the way an
+  // owner edits the block at the top. `run` then drives the installed copy.
+  installScript(config: Record<string, string>): void {
+    let script = readFileSync(SCRIPT, "utf8");
+    for (const [name, value] of Object.entries(config)) {
+      const line = new RegExp(`^${name}=.*$`, "m");
+      if (!line.test(script)) throw new Error(`${name} is not a configuration variable of the script`);
+      script = script.replace(line, `${name}=${value}`);
+    }
+    this.write({ [INSTALLED]: script });
+  }
+
   run(...args: string[]): Run {
-    const result = spawnSync("bash", [SCRIPT, ...args], { cwd: this.dir, encoding: "utf8" });
+    const installed = join(this.dir, INSTALLED);
+    const script = existsSync(installed) ? installed : SCRIPT;
+    const result = spawnSync("bash", [script, ...args], { cwd: this.dir, encoding: "utf8" });
     const output = result.stdout + result.stderr;
     const lines = output.split("\n").filter((line) => line !== "");
     return { status: result.status ?? -1, output, lines, fails: lines.filter((l) => l.startsWith("FAIL:")) };
