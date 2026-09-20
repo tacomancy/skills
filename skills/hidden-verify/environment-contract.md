@@ -16,7 +16,7 @@ Names are the application's to choose; the meaning of each variable is fixed by 
 - **Never shown.** With the snapshot path set, nothing in the process calls the window's `show`, `showInactive`, `focus`, or anything else that puts a window on a screen — including a second window the application might open later in the run.
 - **Quits after capture.** Once the PNG is written the application quits on its own, and it quits the same way when the capture fails, reporting the failure on stderr. A run leaves nothing running.
 - **No other effect.** Setting the snapshot path changes only whether the window is shown and when the process quits. The same URL loads, the same state is read, the same start-up runs, so what the PNG shows is what the person would see. A code path that checks the snapshot variable anywhere other than the show-or-capture decision is a second application being verified instead of the real one.
-- **State directory honoured everywhere.** Not only at the obvious call site: the checklist names the places state hides.
+- **State directory honoured everywhere.** Not only at the obvious call site: the checklist names the places state hides. Two stores have no directory to route to — the OS keychain and the OS recent-documents list — so with the state directory set the application reads nothing from them and writes nothing to them. That branch keys on the state directory, never on the snapshot path, so the no-other-effect rule holds.
 
 ## The default delay
 
