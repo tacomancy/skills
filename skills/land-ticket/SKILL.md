@@ -62,15 +62,30 @@ gh issue close <P> --comment "All children landed: #<PR1> (#<N1>), #<PR2> (#<N2>
 
 Done when the ticket reads closed and the parent's state is stated: closed with the PR list, or open with the count of children still open.
 
-## 4. Site issue
+## 4. Post-merge triggers
 
-Read `CLAUDE.md` § The public site and take its trigger list against this PR's diff: a skill landed and became installable, a skill added, removed or renamed, a skill's description line changed, an invariant changed. For any trigger that fired, open one issue in the site repository naming the PR and what the page should now say:
+Read the repository's guidance file — `CLAUDE.md` or `AGENTS.md` at the root — for the section stating what must happen when a change lands: a list of **triggers**, each an obligation with a condition on the change and a thing to do when it holds. Take every trigger against this PR's diff:
 
 ```bash
-gh issue create --repo tacomancy/tacomancy --title "skills page: <what moved>" --body "<PR link>; the page should now say <…>"
+gh pr diff <PR> --name-only
+gh pr diff <PR>
 ```
 
-Done when each fired trigger has an issue, or the list was checked and none fired — say which.
+Each trigger ends in one of three states, and the step is done when every one is marked:
+
+- **Did not fire** — the diff holds nothing the condition names.
+- **Fired, already covered** — the condition holds, and the target already has an open issue for it. Search the target first, before opening anything: an open issue naming this PR, or naming the same change (the skill, the page, the section the trigger is about). Link it in the report, and add one comment there naming this PR when the issue does not name it yet — two sessions landing PRs for one skill make one issue, not two.
+- **Fired, done** — the condition holds and nothing covers it; do the thing the trigger says, naming the PR.
+
+```bash
+# gh, as an example of search-the-target-first, then open
+gh issue list --repo <owner>/<site> --state open --search "<PR link or the change's name>" --json number,title,url
+gh issue create --repo <owner>/<site> --title "<page>: <what moved>" --body "<PR link>; the page should now say <…>"
+```
+
+A guidance file with no such section, or none at the root, is reported as "no post-merge section" and the step ends there.
+
+As an example of such a section: this repository's `CLAUDE.md § The public site` lists three triggers — a skill landed, a skill added, removed or renamed or its description line changed, an invariant changed — each obliging one issue in the site's repository naming the PR and what the page should now say. A PR that lands `skills/foo/SKILL.md` fires the first; one touching only `tests/` fires none.
 
 ## 5. Frontier
 
@@ -84,4 +99,4 @@ for each open ticket under the same `skill/<name>` label. Done when the report n
 
 ## Report
 
-Five lines: the merge commit, the ticket closed and the parent's state, the site issue opened or "no trigger fired", the frontier, and anything handed back from the gate — or that the branch was updated first.
+Five lines: the merge commit, the ticket closed and the parent's state, the triggers — each fired one with what was done or the issue that already covered it, and "none fired" or "no post-merge section" otherwise — the frontier, and anything handed back from the gate — or that the branch was updated first.
