@@ -1,11 +1,11 @@
 ---
 name: pin-prototypes
-description: Draft and run the prompt set that takes a project's brief through an HTML-exporting design tool the human drives. Use when a project has a brief and is about to prompt a design tool for its surfaces, or when a design session has degraded and needs splitting.
+description: Draft and run the prompt set that takes a project's brief through an HTML-exporting design tool the human drives. Use when a project has a brief and is about to prompt a design tool for its surfaces, when a design session has degraded and needs splitting, or when a surface is about to be implemented from a pinned prototype — or has none.
 ---
 
 # Pin prototypes
 
-A design tool's first answer for any well-known surface is the **pattern-matched** one — the inbox that looks like email — and asking for several surfaces in one prompt averages them. The skill's answer is a **prompt set** drafted from the brief: **Prompt 0** for the visual language, run once; one prompt per surface that names what to show, what the pattern-matched answer would be, and what the brief settles; and a **push-back table** written before any output exists, so the review of an output is anchored by the brief rather than by the output. The human runs the prompts; the agent drafts, distils the **standing header** that keeps later sessions on the first session's language, and **pins** each accepted output — HTML and a full-length PNG, numbered to its prompt — into a folder nothing edits, so an accepted output stays the decision it was.
+A design tool's first answer for any well-known surface is the **pattern-matched** one — the inbox that looks like email — and asking for several surfaces in one prompt averages them. The skill's answer is a **prompt set** drafted from the brief: **Prompt 0** for the visual language, run once; one prompt per surface that names what to show, what the pattern-matched answer would be, and what the brief settles; and a **push-back table** written before any output exists, so the review of an output is anchored by the brief rather than by the output. The human runs the prompts; the agent drafts, distils the **standing header** that keeps later sessions on the first session's language, and **pins** each accepted output — HTML and a full-length PNG, numbered to its prompt — into a folder nothing edits, so an accepted output stays the decision it was. Once an output is pinned it is a design decision, and the **precedence rule** says which of brief and prototype an implementer takes at its word.
 
 ## 1. Draft
 
@@ -38,4 +38,16 @@ For each accepted output, in this order:
 
 Done when the folder holds the HTML, its PNG, and one runtime, the README has the line, and a diff of the stored HTML against the file as downloaded shows nothing but the runtime reference.
 
-Origin: Vitrine's `docs/reference/design-prompts.md` and its § Running these; `docs/reference/prototypes/` and the `prototypes/` line of `docs/reference/README.md`.
+## 4. Review
+
+Before a surface is implemented, write its **review note** for the implementing agent, in the shape of [`review-checklist.md`](review-checklist.md). The note applies the precedence rule, stated here in the words the adopting repository copies:
+
+> On a prototype, the brief wins on behaviour it specifies; the prototype wins on layout and visual treatment; check it against the push-back table before trusting it as settled; a surface with no prototype falls back to brief prose plus the established visual language; palette and typography come from the brand kit, not from a prototype.
+
+The first time the skill runs in a repository, copy the rule verbatim into its guidance file — `CLAUDE.md` or `AGENTS.md`, whichever exists; where `guidance-tiers` is installed, the file it chose — under its own heading, so an implementing agent reads the rule without loading this skill. Done when the guidance file carries all five clauses.
+
+Read the brief section the surface implements and the surface's row in the push-back table before opening the prototype, so the note's brief-wins and push-back parts are written from the brief rather than from the output. Then open the pinned HTML and PNG and fill the remaining parts. Done when the note's four parts are filled, the push-back row is marked cleared or not cleared with the evidence named, and the note sits where the implementing branch's `code-review` will read it: the pull request description, or the ticket.
+
+A surface with no prototype gets a note all the same, under the checklist's no-prototype variant: the brief section it implements, the behaviours the brief specifies, and the established visual language — Prompt 0's output, or the standing header — as what it settles. Layout the note leaves open comes from the brief's prose; the rule leaves the implementer nothing to invent.
+
+Origin: Vitrine's `docs/reference/design-prompts.md` and its § Running these; `docs/reference/prototypes/` and the `prototypes/` line of `docs/reference/README.md`; `CLAUDE.md` § Precedence.

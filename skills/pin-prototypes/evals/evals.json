@@ -6,10 +6,10 @@
       "name": "three-surface-brief-drafts-a-complete-prompt-set",
       "prompt": "Draft the design prompts for this project from its brief.",
       "fixture": "fixtures/brief, copied into a fresh repository as docs/brief.md",
-      "expected_output": "One Markdown file: a running preamble; Prompt 0 marked run once, followed by prompt 01; prompts 01\u201303 for Library, Book, Notes across books, each with show, push back, and the-brief-settles parts; a push-back table with three rows copied from the push-back parts.",
+      "expected_output": "One Markdown file: a running preamble; Prompt 0 marked run once, followed by prompt 01; prompts 01–03 for Library, Book, Notes across books, each with show, push back, and the-brief-settles parts; a push-back table with three rows copied from the push-back parts.",
       "assertions": [
         "Prompt 0 is marked run once and lists the three objects and three surfaces",
-        "exactly three surface prompts, numbered 01\u201303 in the brief's order, each with all three fixed parts",
+        "exactly three surface prompts, numbered 01–03 in the brief's order, each with all three fixed parts",
         "each push-back part names a pattern-matched answer the brief rules out (a storefront of covers, a rating, a recommendation, search by title)",
         "each the-brief-settles part carries behaviour the brief specifies (shelf-move rule, note ordering, search on text only, keyboard keys)",
         "the push-back table has one row per surface and no row invents a failure absent from its prompt"
@@ -25,6 +25,20 @@
         "every header line describes the paste, not the prompt's request",
         "the object and surface lists match Prompt 0, with done surfaces marked",
         "the response says to open the next session with the header, then run prompt 03"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "review-note-for-a-pinned-surface-applies-the-precedence-rule",
+      "prompt": "Surface 02 — Book is pinned; here is what the output rendered: <paste of fixtures/session-1-output.md>. Write its review note, and put the precedence rule in CLAUDE.md.",
+      "fixture": "the prompt set from eval 1 in a fresh repository with an empty CLAUDE.md, plus fixtures/session-1-output.md as the paste",
+      "expected_output": "A four-part review note for 02 — Book in the shape of review-checklist.md, and CLAUDE.md carrying the five-clause precedence rule verbatim.",
+      "assertions": [
+        "CLAUDE.md contains the precedence rule with all five clauses and no paraphrase",
+        "the brief-wins part lists the Book section's behaviours (page-then-date note order, one-field note entry, edit in place, delete asks once, shelf rule shared with the library, the n key) and no layout",
+        "the push-back part quotes prompt 02's row from the push-back table and says cleared or not cleared with evidence from the paste",
+        "the prototype-settles part carries layout and treatment from the paste (left rail, row height, the indented note block) and no palette or typeface",
+        "every line of the note is one citable claim"
       ]
     }
   ]
