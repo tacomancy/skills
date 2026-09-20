@@ -1,0 +1,16 @@
+[
+  {"query": "ok the grill on the sync design is done — we're going with CRDT-per-notebook, rejected the single-JSON-file and the SQLite options, and parked full-text search until the desktop app ships. can you write that up as the next ADR? docs/adr has 0001-0006 already and there's a docs/architecture.md", "should_trigger": true},
+  {"query": "please review docs/adr/0004-attachments-beside-the-entry.md — it was written before we had any conventions and I want to know how far it is from the shape the newer ones follow. don't rewrite it, just tell me what's off", "should_trigger": true},
+  {"query": "quick one: the vault ADR is going to say we use blake3 for content hashing. does the hash algorithm belong in the ADR, or is that architecture-doc material? same question for the 4 MB chunk size", "should_trigger": true},
+  {"query": "that's my last question about the plugin API, thanks. decision is: plugins get a versioned manifest, no dynamic loading, the sandbox is a named fallback if the permission model doesn't hold. record the decision.", "should_trigger": true},
+  {"query": "we have an architecture decision record for the storage engine (0007) marked Proposed pending the migration rehearsal. the rehearsal ran last week — two of the fixtures didn't round-trip. what do I do to the ADR now?", "should_trigger": true},
+  {"query": "New teammate asked why our ADRs don't have a Rationale section and I couldn't explain it well. Draft the ADR for switching the export format from HTML to Markdown+frontmatter (we decided this in Thursday's review, notes are in notes/2026-09-18-export.md) so I can point at a good example.", "should_trigger": true},
+  {"query": "ADR 0009 is being replaced by the one you're about to write on the new auth model. what happens to 0009, and then write the new one from the thread I pasted above", "should_trigger": true},
+  {"query": "can you write docs/architecture.md for the vitrine repo? cover the module layout, the data flow from the editor to the vault, and the open questions list. we don't have one yet", "should_trigger": false},
+  {"query": "here's the list of 6 recommendations from the review — which of these would be hard to reverse later? just rank them, no write-up needed", "should_trigger": false},
+  {"query": "set up a docs/adr/ folder in this repo with a numbered template and a CI check that fails on a numbering gap. nothing's been decided yet, i just want the structure in place", "should_trigger": false},
+  {"query": "read docs/adr/0003-retry-policy.md and tell me what our current retry backoff is — I need the number for a support ticket", "should_trigger": false},
+  {"query": "summarise ADRs 0001 through 0008 into a one-paragraph-each digest for the onboarding page. plain prose, no headings", "should_trigger": false},
+  {"query": "we need to decide between Postgres and SQLite for the desktop app's local store. walk me through the tradeoffs — I haven't made up my mind and want to be interviewed on it", "should_trigger": false},
+  {"query": "write a PR description for #412: it migrates the settings table to the new schema decided in ADR 0006. link the ADR and list the migration steps", "should_trigger": false}
+]
