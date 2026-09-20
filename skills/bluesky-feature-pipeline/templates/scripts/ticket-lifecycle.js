@@ -50,9 +50,11 @@ async function main() {
   }
   const api = tracker(env("GITHUB_API_URL"), env("GITHUB_REPOSITORY"), env("GITHUB_TOKEN"));
   // The current labels decide each write, so a rerun or a ticket claimed some other way
-  // neither duplicates a label nor fails removing one that is not there.
+  // neither duplicates a label nor fails removing one that is not there. A ticket holds
+  // one lifecycle label at a time; `ticket:blocked` is a side state and stays.
+  const previous = target === LANDED ? IN_REVIEW : LANDED;
   const labels = (await api.list(`issues/${ticket}/labels`)).map((label) => label.name);
-  if (target === LANDED && labels.includes(IN_REVIEW)) await api.delete(`issues/${ticket}/labels/${encodeURIComponent(IN_REVIEW)}`);
+  if (labels.includes(previous)) await api.delete(`issues/${ticket}/labels/${encodeURIComponent(previous)}`);
   if (!labels.includes(target)) await api.post(`issues/${ticket}/labels`, { labels: [target] });
   console.log(`ticket #${ticket}: ${target}`);
   if (target !== LANDED) return;

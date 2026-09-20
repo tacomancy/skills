@@ -137,3 +137,13 @@ describe("the workflow file", () => {
     expect(steps[1].env).toEqual({ GITHUB_TOKEN: "${{ github.token }}" });
   });
 });
+
+describe("PR opened — a ticket that already landed", () => {
+  // A follow-up PR against a landed ticket puts it back in review; one lifecycle label at a time.
+  test("ticket:landed gives way to ticket:in-review", async () => {
+    tracker = await new Tracker({ 12: { body: "## Parent\n\n#3\n", labels: ["skill/foo", "ticket:landed"] } }).start();
+    expect(await tracker.run(prEvent("opened", { body: "Closes #12" }))).toMatchObject({ status: 0 });
+    expect(tracker.labelsRemoved(12)).toEqual(["ticket:landed"]);
+    expect(tracker.labelsAdded(12)).toEqual(["ticket:in-review"]);
+  });
+});

@@ -10,6 +10,11 @@ name: Ticket lifecycle labels
 #
 # The logic is scripts/ticket-lifecycle.js beside this file's install path; this
 # file only picks the events and runs it.
+#
+# `pull_request` gives a fork's PR a read-only token, so the label write fails
+# there. Tickets run on branches of this repository; a repository that takes
+# fork PRs weighs `pull_request_target` (a write token; checkout stays on the
+# base ref, so the base's script runs) against the wider grant.
 
 on:
   pull_request:
