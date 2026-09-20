@@ -32,3 +32,22 @@ What the tracker returns, in order, for a run of the skill on PR #12:
    - run 502, head `b2b2b2b`, in progress
 4. Watching run 502: completes, conclusion `success`.
 5. Merge state after 4: `CLEAN`.
+
+## Close answers
+
+What the tracker returns for the Close step, after PR #12 merges:
+
+1. Close #9 with comment "Landed in #12.": succeeds; #9 reads closed.
+2. Body of #9, `## Parent` section: `#7`.
+3. Issues labelled `skill/shelf-sort`, all states, excluding #7: #8 closed, #9 closed, #11 open.
+4. #7 is left open; one child (#11) remains.
+
+## Variant — last child
+
+The same set later: #8 and #9 closed (PRs #10 and #12), #11 has PR #14 open on branch `feat/ticket-11-sort-toggle`, base `main`, body "Implements #11", reviewed, merge state `CLEAN`, its head's run completed green. After PR #14 merges, the tracker returns:
+
+1. Close #11 with comment "Landed in #14.": succeeds; #11 reads closed.
+2. Body of #11, `## Parent` section: `#7`.
+3. Issues labelled `skill/shelf-sort`, all states, excluding #7: #8 closed, #9 closed, #11 closed.
+4. Closing comments: #8 "Landed in #10."; #9 "Landed in #12."
+5. Close #7 with a comment listing the PRs: succeeds; #7 reads closed.
